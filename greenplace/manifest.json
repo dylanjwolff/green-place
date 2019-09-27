@@ -1,7 +1,7 @@
 {
 
         "manifest_version": 2,
-        "name": "Beastify",
+        "name": "Green Place",
         "version": "1.0",
 
         "description": "green things",
@@ -16,9 +16,10 @@
 
         "browser_action": {
                 "default_icon": "icons/beasts-32.png",
-                "default_title": "Beastify",
-                "default_popup": "popup/choose_beast.html"
+                "default_title": "Green Place",
+                "default_popup": "popup/greenplace.html"
         },
+
         "content_scripts": [
                 {
                         "matches": ["<all_urls>"],
