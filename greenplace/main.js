@@ -32,7 +32,7 @@ function computeMetrics(addresses) {
 }
 
 // List(eco-score) -> ()
-function updateHTML() {
+function updateHTML(scores) {
 
 }
 
