@@ -9,7 +9,7 @@ class Address {
     }
 }
 
-// () -> List(Id)
+// () -> Array(Address)
 function lookUpAddresses() {
     let elems = document.getElementsByClassName("list-item--address")
 
@@ -26,9 +26,9 @@ function lookUpAddresses() {
     return arr
 }
 
-// List(address) -> List(eco-score)
-function computeMetrics() {
-
+// Array(Address) -> List(eco-score)
+function computeMetrics(addresses) {
+    return 0.5
 }
 
 // List(eco-score) -> ()
@@ -38,6 +38,6 @@ function updateHTML() {
 
 
 // add arguments and stuff, etc
-lookUpAddresses()
-computeMetrics()
-updateHTML()
+addresses = lookUpAddresses()
+scores = computeMetrics(addresses)
+updateHTML(scores)
