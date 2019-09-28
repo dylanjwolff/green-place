@@ -15,6 +15,7 @@
                 "*://nominatim.openstreetmap.org/*",
                 "*://climate-api-test.dakar.moccu.net/*",
                 "*://api.tomtom.com/*",
+                "*://maps.googleapis.com/maps/api/place/*",
                 "storage"
         ],
 
@@ -26,7 +27,7 @@
 
         "content_scripts": [
                 {
-                        "matches": ["*://*.homegate.ch/*"],
+                        "matches": ["<all_urls>"],
                         "js": ["dist/bundle.js"]
                 }
         ],

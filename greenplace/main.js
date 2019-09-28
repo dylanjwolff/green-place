@@ -4,6 +4,8 @@ import {
     get_gps_loc
 } from "./api_caller.js"
 
+import { nearby } from "./nearby.js"
+
 let DEFAULT_ID_PREFIX = "green_place_"
 
 var hover_on = false;
