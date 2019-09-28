@@ -15,7 +15,10 @@
                 "*://nominatim.openstreetmap.org/*",
                 "*://climate-api-test.dakar.moccu.net/*",
                 "*://api.tomtom.com/*",
-                "storage"
+                "storage",
+                "tabs",
+                "webRequest",
+                "<all_urls>"
         ],
 
         "browser_action": {

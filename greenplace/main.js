@@ -12,6 +12,9 @@ let DEFAULT_ID_PREFIX = "green_place_"
 
 var hover_on = false;
 var current_selected_address = null;
+var nbAddresses = 0;
+var cached_adresses = [];
+var check_down = true;
 
 class Address {
     constructor(id, address) {
@@ -36,6 +39,17 @@ function lookUpAddresses() {
     }
 
     return arr
+}
+
+function checkInArray(array, address) {
+    console.log("checkInArray")
+    for (let a of array){
+        console.log(a.address)
+        console.log(address)
+        if (a.address === address)
+            return true
+    }
+    return false
 }
 
 // Array(Address) -> List(eco-score)
@@ -121,6 +135,7 @@ function updateHTML(addresses) {
     `
     document.getElementsByTagName('head')[0].appendChild(style)
     let length = addresses.length
+    console.log(addresses.length)
     for (let i = 0; i < length; ++i) {
         let parent = document.getElementById(addresses[i].id)
         parent.classList.add("address-parent")
@@ -139,7 +154,27 @@ function updateHTML(addresses) {
             panel.style.left = (rect.left - 60)+ "px"
             panel.style.top = (rect.top + 40) + "px"
 
-            current_selected_address = i
+            current_selected_address = addresses[i]
+
+            let pin = document.getElementById("pin")
+            console.log(current_selected_address)
+            console.log(cached_adresses)
+            console.log(typeof pin.classList)
+
+            if (!cached_adresses.includes(current_selected_address)){
+                console.log("cached_adresses does not contains current selected")
+            }
+
+            if (checkInArray(cached_adresses, current_selected_address.address) && !pin.classList.contains("pin_selected")) {
+                pin.classList.add("pin_selected")
+            } else if (!checkInArray(cached_adresses, current_selected_address.address) && pin.classList.contains("pin_selected")) {
+                console.log("remove selected")
+                pin.classList.remove("pin_selected")
+            }
+
+            console.log("after")
+
+            browser.runtime.sendMessage({"request" : "sendAddresses"})
 
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0.3)"
@@ -174,9 +209,8 @@ function updateHTML(addresses) {
         })
 
         // Set appropriate color style
-        //TODO don't use scores, use address.footprint
         let score = addresses[i].footprint
-        console.log(score)
+        console.log(i)
         if (score >= 0.7) {
             element.classList.add("greenplace-underline-red")
         } else if (score >= 0.4) {
@@ -193,6 +227,7 @@ function updateHTML(addresses) {
         image.style.marginTop = "23px"
         image.style.marginRight = "5px"
         document.getElementById(addresses[i].id).childNodes[0].prepend(image)
+
     }
 }
 
@@ -300,16 +335,20 @@ function createPanel(addresses) {
     let leaf = document.createElement("img")
     let pin = document.createElement("img")
     pin.id = "pin"
+    pin.style.zIndex = "300"
 
-    pin.addEventListener("onmousedown", function (event) {
+    pin.addEventListener("mousedown", function (event) {
         if (!pin.classList.contains("pin_selected")) {
             pin.classList.add("pin_selected")
-            browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[current_selected_address]})
+            browser.runtime.sendMessage({"request" : "addAddress", "address" : current_selected_address})
+            browser.runtime.sendMessage({"request" : "sendAddresses"})
         } else {
             pin.classList.remove("pin_selected")
-            browser.runtime.sendMessage({"request": "removeAddress", "address" : addresses[current_selected_address]})
+            browser.runtime.sendMessage({"request" : "removeAddress", "address" : current_selected_address})
+            browser.runtime.sendMessage({"request" : "sendAddresses"})
         }
     });
+
     let percentage = document.createElement("div")
 
     panel.id = "panel-id"
@@ -366,8 +405,148 @@ var rgbToHex = function (rgb) {
     return hex
 };
 
+
+browser.runtime.onMessage.addListener(updateAddresses);
+
+function updateAddresses(message) {
+    console.log("updating number addresses")
+    cached_adresses = message.Adresses
+    nbAddresses = cached_adresses.length
+    document.getElementById("checkout").innerHTML = `
+        saved (${nbAddresses})
+    `
+}
+
+function createSummary() {
+    let summary = document.createElement("div")
+    summary.innerHTML = `
+    <!-- stylesheets -->
+    <link rel="stylesheet" href="style.css" type="text/css" />
+    <!-- favicon -->
+
+    <!-- just in case viewer is using Internet Explorer -->
+    <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+<!-- Header-->
+<h1 style="text-align: center">Housing Summary</h1>
+<br>
+
+<!-- main container -->
+<div class="container">
+    <section class="Housing Summary">
+        <div class="container" id="to_fill">
+        </div>
+    </section>
+</div>
+<!-- End Main Container -->
+
+</body>
+</html>`
+    summary.style.left = "25%";
+    summary.style.top = "100%";
+    summary.style.opacity = 1;
+    summary.style.zIndex = 500;
+    summary.style.backgroundColor = "rgba(255, 255, 255, .95)";
+    summary.style.height = "75%";
+    summary.style.width = "50%";
+    summary.style.position = "fixed";
+    summary.id = "summary";
+    summary.style.overflow = "hidden";
+
+    document.body.prepend(summary)
+}
+
+function fillSummary(){
+    let summary = document.getElementById("summary")
+    let to_fill = document.getElementById("to_fill")
+    to_fill.innerHTML = ``;
+
+    for (let a of cached_adresses) {
+        let row = document.createElement("div")
+        row.classList.add("row")
+
+        let grid_a = document.createElement("div")
+        grid_a.classList.add("grid-4")
+
+        grid_a.innerHTML = `
+            ${a.address}
+        `
+        row.appendChild(grid_a)
+
+        let grid_b = document.createElement("div")
+        grid_b.classList.add("grid-4")
+
+        grid_b.innerHTML = `
+            <a href=""> link to housing ad </a><hr>
+        `
+        row.appendChild(grid_b)
+
+        to_fill.appendChild(row)
+    }
+}
+
+function createCheckout(){
+    let checkout = document.createElement("div")
+    checkout.innerHTML = `
+        saved (${nbAddresses})
+    `
+    checkout.style.height = "100px";
+    checkout.style.width = "200px";
+    checkout.style.backgroundColor = "rgba(255, 255, 255, .95)";
+    checkout.style.textAlign = "center"
+    checkout.style.fontSize = "40px";
+    checkout.style.fontSize = "helvetica"
+    checkout.style.zIndex = "400";
+    checkout.style.position = "fixed"
+    checkout.style.left = "45%";
+    checkout.style.top = "90%";
+    checkout.id = "checkout"
+
+    checkout.addEventListener("mousedown", function (event) {
+        console.log("mousedown")
+        if (check_down) {
+            let summary = document.getElementById("summary")
+            checkout.style.top = "30%";
+            checkout.style.transitionProperty = "top";
+            checkout.style.transitionDuration = ".6s";
+            checkout.innerHTML = `
+                fold down
+            `
+
+            summary.style.top = "35%";
+            summary.style.transitionProperty = "top";
+            summary.style.transitionDuration = ".6s";
+
+            check_down = false
+            fillSummary()
+        } else {
+            let summary = document.getElementById("summary")
+
+            checkout.style.top = "90%";
+            checkout.style.transitionProperty = "top";
+            checkout.style.transitionDuration = ".6s";
+            checkout.innerHTML = `
+                saved (${nbAddresses})
+            `
+
+            summary.style.top = "100%";
+            summary.style.transitionProperty = "top";
+            summary.style.transitionDuration = ".6s";
+
+            check_down = true
+        }
+
+    });
+
+    document.body.prepend(checkout)
+}
+
 // add arguments and stuff, etc
+createSummary()
+createCheckout()
+
 let addresses = lookUpAddresses()
 createPanel(addresses)
 computeMetrics(addresses)
 updateHTML(addresses)
+
+browser.runtime.sendMessage({"request" : "sendAddresses"})
