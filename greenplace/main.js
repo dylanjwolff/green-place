@@ -7,6 +7,7 @@ import {
     nearby
 } from "./nearby.js"
 
+const GOOGLE_FEATURE_FLAG = false
 let DEFAULT_ID_PREFIX = "green_place_"
 
 var hover_on = false;
@@ -107,6 +108,21 @@ async function computeMetrics(startPlaces, dstPlaces) {
     startPlaces = startPlaces.filter((elem) => {
         return elem.found;
     })
+
+    startPlaces = startPlaces.map( sp => {sp.poi = []; return sp})
+
+    if (GOOGLE_FEATURE_FLAG) {
+            startPlaces.map( sp => {
+                    nearby(sp.lat, sp.lon, "grocery")
+                       .then( res => { sp.poi.push({tag: "grocery", lat: res.lat, lon: res.lng}); return sp })
+                       .catch( e => "poi err" + e )
+            })
+            startPlaces = await Promise.all(startPlaces)
+    } else {
+            startPlaces = startPlaces.map( sp => { sp.poi.push({lat: "47.3723941", lon: "8.5423328", tag: "grocery"}); return sp }) 
+    }
+
+    console.log("startPlaces ", startPlaces)
     console.log("startPlaces is not", startPlaces.length)
     //Compute the distance matrix
     let allPromises = new Array()
@@ -687,7 +703,6 @@ browser.runtime.sendMessage({"request" : "sendAddresses"})
 let startPlaces = lookUpAddresses()
 browser.runtime.sendMessage({"request" : "sendAddresses"})
 
-console.log("lookUp")
 let destPlaces = []
 browser.storage.local.get("address_places")
     .then((result) => {
