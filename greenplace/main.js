@@ -62,6 +62,24 @@ function updateHTML(addresses, scores) {
         let element = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
         element.classList.add("address")
 
+        element.addEventListener("mouseover", function(event) {
+            var rect = event.target.getBoundingClientRect();
+            console.log(rect.top, rect.right, rect.left, rect.bottom)
+
+            let panel = document.getElementById("panel-id")
+            panel.style.opacity = 1
+            panel.style.zIndex = 200
+            panel.style.position = "fixed"
+            panel.style.left = (rect.left - 60)+ "px"
+            panel.style.top = (rect.top + 60) + "px"
+        })
+
+        element.addEventListener("mouseout", function(event) {
+            let panel = document.getElementById("panel-id")
+            panel.style.opacity = 0
+            panel.style.zIndex = -1
+        })
+
         // Set appropriate color style
         let score = scores[i]
         if (score >= 0.7) {
@@ -90,7 +108,7 @@ function createPanel(addresses) {
 
     style.innerHTML = `
         .overlay {
-            opacity: .5;
+            opacity: 0;
             z-index:200;
             position:fixed;
             display:block;
@@ -108,9 +126,17 @@ function createPanel(addresses) {
     let panel = document.createElement("div")
     panel.classList.add("panel")
     panel.classList.add("overlay")
+    panel.id = "panel-id"
 
     panel.innerText = "Panel"
     document.body.prepend(panel)
+
+    /*window.onmousemove = function (event) {
+        var x = event.clientX,
+            y = event.clientY
+        panel.style.top = (y + 20) + "px"
+        panel.style.left = (x + 20) + "px"
+    }*/
 }
 
 // score -> color
