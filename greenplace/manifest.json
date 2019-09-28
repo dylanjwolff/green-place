@@ -7,7 +7,7 @@
         "description": "green things",
         "homepage_url": "https://github.com/wolffdy/green-place",
         "icons": {
-                "48": "icons/beasts-48.png"
+                "48": "icons/leaf.png"
         },
 
         "permissions": [
@@ -23,7 +23,7 @@
 
         "content_scripts": [
                 {
-                        "matches": ["<all_urls>"],
+                        "matches": ["*://*.homegate.ch/*"],
                         "js": ["dist/bundle.js"]
                 }
         ]
