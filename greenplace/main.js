@@ -35,23 +35,61 @@ function computeMetrics(addresses) {
 
 // List(eco-score) -> ()
 function updateHTML(addresses, scores) {
+    var style = document.createElement("style")
+    style.innerHTML = `
+        .greenplace-underline-green {
+            display: inline-block;
+            border-bottom: 6px solid #4DD662;
+            border-radius: 8px;
+        }
+        .greenplace-underline-yellow {
+            display: inline-block;
+            border-bottom: 6px solid #FDE54D;
+            border-radius: 8px;
+        }
+        .greenplace-underline-red {
+            display: inline-block;
+            border-bottom: 6px solid #DC3937;
+            border-radius: 8px;
+        }
+    `
+    document.getElementsByTagName('head')[0].appendChild(style)
     let length = addresses.length
     for (var i = 0; i < length; ++i) {
-        console.log(addresses[i].id)
         let element = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
         element.classList.add("address")
-        element.style.backgroundColor = colorFromScore(0.7)
-        element.outerHTML = element.outerHTML.replace(/p/g, "span")
+
+        // Set appropriate color style
+        let score = scores[i]
+        if (score >= 0.7) {
+            element.classList.add("greenplace-underline-red")
+        } else if (score >= 0.4) {
+            element.classList.add("greenplace-underline-yellow")
+        } else {
+            element.classList.add("greenplace-underline-green")
+        }
+
+        // Add leaf image to the side of the underline
+        var image = document.createElement("img")
+        image.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
+        image.style.height = "20px"
+        image.style.width = "20px"
+        image.style.marginTop = "23px"
+        image.style.marginRight = "5px"
+        document.getElementById(addresses[i].id).childNodes[0].prepend(image)
     }
 }
 
 // score -> color
 // linear from red (0) to green (1)
-function colorFromScore(score) {
-    let green = Math.floor(score * 255)
-    let red = Math.floor((1 - score) * 255)
-    let hex = "#" + rgbToHex(red) + rgbToHex(green) + "00"
-    return hex
+function colorFromScore(score, classList) {
+    if (score >= 0.7) {
+        return classList.add("greenplace-underline-green")
+    } else if (score >= 0.4) {
+        return element.classList.add("greenplace-underline-yellow")
+    } else {
+        return element.classList.add("greenplace-underline-red")
+    }
 }
 
 // decimal (0 to 255, and +) -> hex
@@ -67,6 +105,7 @@ var rgbToHex = function (rgb) {
 // add arguments and stuff, etc
 let addresses = lookUpAddresses()
 let scores = computeMetrics(addresses)
+scores = Array.from({length: 40}, () => Math.random()) // TODO remove
 updateHTML(addresses, scores)
 
 // Example of how to call function from another file now that webpack is set up
