@@ -7,14 +7,15 @@
         "description": "green things",
         "homepage_url": "https://github.com/wolffdy/green-place",
         "icons": {
-                "48": "icons/beasts-48.png"
+                "48": "icons/leaf.png"
         },
 
         "permissions": [
                 "activeTab",
                 "*://nominatim.openstreetmap.org/*",
                 "*://climate-api-test.dakar.moccu.net/*",
-                "*://api.tomtom.com/*"
+                "*://api.tomtom.com/*",
+                "storage"
         ],
 
         "browser_action": {
@@ -25,9 +26,12 @@
 
         "content_scripts": [
                 {
-                        "matches": ["<all_urls>"],
+                        "matches": ["*://*.homegate.ch/*"],
                         "js": ["dist/bundle.js"]
                 }
-        ]
+        ],
+        "background" : {
+                "scripts" : ["background/background.js"]
+        }
 
 }

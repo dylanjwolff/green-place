@@ -10,6 +10,8 @@ document.body.style.border = "5px solid red";
 
 let DEFAULT_ID_PREFIX = "green_place_"
 
+var hover_on = false;
+
 class Address {
     constructor(id, address) {
         this.id = id
@@ -91,29 +93,256 @@ function normalize(startingAddresses, max_carbon){
     for(var i in startingAddresses){
         for(var target in startingAddresses[i].all_footprints){
             startingAddresses[i].all_footprints[target] = startingAddresses[i].all_footprints[target]/max_carbon;
+            startingAddresses[i].footprint = startingAddresses[i].all_footprints[target];
         }
     }
 }
 
 // List(eco-score) -> ()
 function updateHTML(addresses) {
-    console.log("Updating HTML")
-    for (var addr of addresses) {
-        // console.log(addresses[i].id)
-        let element = document.getElementById(addr.id).childNodes[0].childNodes[0]
+    var style = document.createElement("style")
+    style.innerHTML = `
+        .greenplace-underline-green {
+            display: inline-block;
+            border-bottom: 6px solid #4DD662;
+            border-radius: 5px;
+        }
+        .greenplace-underline-yellow {
+            display: inline-block;
+            border-bottom: 6px solid #FDE54D;
+            border-radius: 5px;
+        }
+        .greenplace-underline-red {
+            display: inline-block;
+            border-bottom: 6px solid #DC3937;
+            border-radius: 5px;
+        }
+    `
+    document.getElementsByTagName('head')[0].appendChild(style)
+    let length = addresses.length
+    for (let i = 0; i < length; ++i) {
+        let parent = document.getElementById(addresses[i].id)
+        parent.classList.add("address-parent")
+
+        let element = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
         element.classList.add("address")
-        element.style.backgroundColor = colorFromScore(addr.footprint)
-        element.outerHTML = element.outerHTML.replace(/p/g, "span")
+
+        element.addEventListener("mouseover", function(event) {
+            var rect = event.target.getBoundingClientRect();
+
+            // Update the properties of the element
+            let panel = document.getElementById("panel-id")
+            panel.style.opacity = 1
+            panel.style.zIndex = 200
+            panel.style.position = "fixed"
+            panel.style.left = (rect.left - 60)+ "px"
+            panel.style.top = (rect.top + 40) + "px"
+
+            if (event.target.classList.contains("greenplace-underline-green")) {
+                event.target.style.backgroundColor = "rgba(77, 214, 98, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(77, 214, 98)"
+            } else if (event.target.classList.contains("greenplace-underline-yellow")) {
+                event.target.style.backgroundColor = "rgba(253, 229, 77, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(253, 229, 77)"
+            } else {
+                event.target.style.backgroundColor = "rgba(220, 57, 55, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(220, 57, 55)"
+            }
+
+            // Update the content according to the address object
+            panel.childNodes[0].childNodes[0]
+
+            browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[i]})
+
+            hover_on = true
+        })
+
+        element.addEventListener("mouseout", function(event) {
+            let panel = document.getElementById("panel-id")
+            panel.style.opacity = 0
+            //panel.style.zIndex = -1
+
+
+            if (event.target.classList.contains("greenplace-underline-green")) {
+                event.target.style.backgroundColor = "rgba(77, 214, 98, 0)"
+            } else if (event.target.classList.contains("greenplace-underline-yellow")) {
+                event.target.style.backgroundColor = "rgba(253, 229, 77, 0)"
+            } else {
+                event.target.style.backgroundColor = "rgba(220, 57, 55, 0)"
+            }
+
+        })
+
+        // Set appropriate color style
+        //TODO don't use scores, use address.footprint
+        let score = scores[i]
+        if (score >= 0.7) {
+            element.classList.add("greenplace-underline-red")
+        } else if (score >= 0.4) {
+            element.classList.add("greenplace-underline-yellow")
+        } else {
+            element.classList.add("greenplace-underline-green")
+        }
+
+        // Add leaf image to the side of the underline
+        var image = document.createElement("img")
+        image.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
+        image.style.height = "20px"
+        image.style.width = "20px"
+        image.style.marginTop = "23px"
+        image.style.marginRight = "5px"
+        document.getElementById(addresses[i].id).childNodes[0].prepend(image)
     }
+}
+
+// List(address) -> ()
+function createPanel(addresses) {
+    var style = document.createElement("style")
+    style.id = "panel-style"
+
+    style.innerHTML = `
+        .panel-content {
+            position: relative;
+            background-color: white;
+            background-clip: content-box;
+            border-radius: 30px;
+        }
+        #panel-id {
+            opacity: 0;
+            position : fixed;
+        }
+        
+        .overlay {
+            z-index: 199;
+            position:relative;
+            display:block;
+        }
+
+        .panel {
+            padding-top:20px;
+            width: 250px;
+            height: 460px;
+            box-sizing: padding-box;
+        }
+
+        .footprint {
+            position: relative;
+            width: 100%;
+            height: 35%;
+            background-color: #8fdb9d;
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            margin-top: 15%;
+            margin-left: 17%;
+            display: inline-block;
+        }
+
+        .pin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            margin-top: 5%;
+            margin-left: 81%;
+            display: inline-block;
+        }
+
+        .pin_selected {
+            box-shadow: 0 1px 18px 3px #7cc489 inset
+        }
+
+        .percentage {
+            position: absolute;
+            display: inline-block;
+            font-size: 50px;
+            margin-left: 50%;
+            margin-top: 20%;
+        }
+    `;
+
+    document.head.appendChild(style)
+
+    let panel = document.createElement("div")
+    let panelContent = document.createElement("div")
+
+    panel.style.transitionProperty = "opacity"
+    panel.style.transitionDuration = ".15s"
+    panel.isMouseOver = false
+
+    panel.addEventListener("onemouseover", function (event) {
+        panel.isMouseOver = true;
+    })
+
+    panel.addEventListener("onmouseleave", function (event) {
+        panel.isMouseOver = false;
+    })
+
+    panel.addEventListener("mouseover", function (event) {
+        if (hover_on) {
+            panel.style.opacity = 1
+            panel.target.style.zIndex = 200
+        }
+    });
+
+    panel.addEventListener("mouseleave", function (event) {
+        hover_on = false
+        panel.style.zIndex = -1
+        panel.style.opacity = 0
+    });
+
+    let footprint = document.createElement("div")
+    let leaf = document.createElement("img")
+    let pin = document.createElement("img")
+    let percentage = document.createElement("div")
+
+    panel.id = "panel-id"
+    panelContent.id = "panel-content"
+    footprint.classList.add("footprint")
+    leaf.classList.add("leaf")
+    pin.classList.add("pin")
+    percentage.classList.add("percentage")
+    panelContent.classList.add("panel-content")
+    panelContent.classList.add("overlay")
+    panelContent.classList.add("panel")
+
+    leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
+
+    pin.src = "http://simpleicon.com/wp-content/uploads/pin.png"
+
+    percentage.textContent = "74%"
+
+    footprint.appendChild(leaf)
+    footprint.appendChild(pin)
+    footprint.appendChild(percentage)
+    panelContent.appendChild(footprint)
+
+    panel.appendChild(panelContent)
+
+    document.body.prepend(panel)
+
+    /*window.onmousemove = function (event) {
+        var x = event.clientX,
+            y = event.clientY
+        panel.style.top = (y + 20) + "px"
+        panel.style.left = (x + 20) + "px"
+    }*/
 }
 
 // score -> color
 // linear from red (0) to green (1)
-function colorFromScore(score) {
-    let green = Math.floor(score * 255)
-    let red = Math.floor((1 - score) * 255)
-    let hex = "#" + rgbToHex(red) + rgbToHex(green) + "00"
-    return hex
+function colorFromScore(score, classList) {
+    if (score >= 0.7) {
+        return classList.add("greenplace-underline-green")
+    } else if (score >= 0.4) {
+        return element.classList.add("greenplace-underline-yellow")
+    } else {
+        return element.classList.add("greenplace-underline-red")
+    }
 }
 
 // decimal (0 to 255, and +) -> hex
@@ -126,13 +355,6 @@ var rgbToHex = function (rgb) {
 };
 
 // add arguments and stuff, etc
-console.log("Before lookup")
-let startingAddresses = lookUpAddresses()
-console.log("After lookup")
-
-let destinationAddresses = [new Address("WORK", "Röntgenstrasse 22, 8005 Zürich")]
-computeMetrics(startingAddresses, destinationAddresses);
-
-// Example of how to call function from another file now that webpack is set up
-
-// update()
+let addresses = lookUpAddresses()
+createPanel(addresses)
+computeMetrics(addresses)
