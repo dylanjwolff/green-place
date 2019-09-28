@@ -77,7 +77,11 @@ async function computeMetrics(startPlaces, dstPlaces) {
 
     //wait for all geoloc to be over
     await Promise.all(pr)
-
+    console.log("startPlaces was length", startPlaces.length)
+    startPlaces = startPlaces.filter((elem) => {
+        return elem.found;
+    })
+    console.log("startPlaces is not", startPlaces.length)
     //Compute the distance matrix
     let allPromises = new Array()
     const carDistances = await calculate_distances(startPlaces, dstPlaces, 'car')

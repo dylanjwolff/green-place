@@ -78,14 +78,19 @@ export async function geoloc_place(place) {
         human_address = encodeURI(place.address)
     }
     // console.log(human_address)
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${human_address}&format=json`,{
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${human_address}&format=json`, {
         cache: "force-cache"
     })
-    // console.log(response)
+    // console.log(`[${place.address}]Response:`, response)
     const resp_json = await response.json()
-    // console.log(resp_json)
-    const first_res = resp_json[0]
-    // console.log(first_res)
-    place.lat = first_res.lat
-    place.lon = first_res.lon
+    // console.log(`[${place.address}]Resp_json:`, resp_json)
+    if (resp_json.length == 0){
+        place.found = false;
+    } else{
+        place.found = true;
+        const first_res = resp_json[0];
+        // console.log(`[${place.address}]First res:`, first_res);
+        place.lat = first_res.lat;
+        place.lon = first_res.lon;
+    }
 }
