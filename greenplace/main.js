@@ -68,4 +68,6 @@ var rgbToHex = function (rgb) {
 let addresses = lookUpAddresses()
 let scores = computeMetrics(addresses)
 updateHTML(addresses, scores)
+
+// Example of how to call function from another file now that webpack is set up
 update()
