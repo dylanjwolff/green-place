@@ -175,7 +175,8 @@ function updateHTML(addresses) {
 
         // Set appropriate color style
         //TODO don't use scores, use address.footprint
-        let score = scores[i]
+        let score = addresses[i].footprint
+        console.log(score)
         if (score >= 0.7) {
             element.classList.add("greenplace-underline-red")
         } else if (score >= 0.4) {
@@ -300,7 +301,7 @@ function createPanel(addresses) {
     let pin = document.createElement("img")
     pin.id = "pin"
 
-    pin.addEventListener("onclick", function (event) {
+    pin.addEventListener("onmousedown", function (event) {
         if (!pin.classList.contains("pin_selected")) {
             pin.classList.add("pin_selected")
             browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[current_selected_address]})
@@ -369,3 +370,4 @@ var rgbToHex = function (rgb) {
 let addresses = lookUpAddresses()
 createPanel(addresses)
 computeMetrics(addresses)
+updateHTML(addresses)
