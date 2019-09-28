@@ -22,6 +22,8 @@ class Address {
 
 // () -> Array(Address)
 function lookUpAddresses() {
+    document.getElementById("resultItemPanel0").remove() // remove first ad
+
     let elems = document.getElementsByClassName("list-item--address")
 
     var arr = new Array()
