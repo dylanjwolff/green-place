@@ -295,13 +295,6 @@ async function createPanel(addresses, address_places, car_boolean) {
             font-size: 38px;
             margin-left: 40%;
             margin-top: 4%;
-            animation: blinker 1s linear infinite;
-        }
-
-        @keyframes changeLetter {
-            50% {
-                opactiy: 0.5;
-            }
         }
 
         .details {
@@ -346,7 +339,6 @@ async function createPanel(addresses, address_places, car_boolean) {
             width: 180px;
             margin-top: 35px;
             text-align: right;
-            animation: blinker 1s linear infinite;
         }
 
         .publicTransportIcon {
@@ -363,19 +355,6 @@ async function createPanel(addresses, address_places, car_boolean) {
             width: 180px;
             margin-top: 69px;
             text-align: right;
-            animation: blinker 1s linear infinite;
-        }
-
-        @keyframes blinker {
-          50% {
-            opacity: 0;
-          }
-        }
-
-        .greenplace-underline-waiting {
-            display: inline-block;
-            border-bottom: 6px solid #EEEEEE;
-            border-radius: 5px;
         }
     `;
 
@@ -443,13 +422,10 @@ async function createPanel(addresses, address_places, car_boolean) {
 
     leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
 
-    pin.src = "https://cdn3.iconfinder.com/data/icons/pix-glyph-set/50/520769-paper_pin-512.png"
+    pin.src = "https://simpleicon.com/wp-content/uploads/pin.png"
 
-    // Show waiting elements
-    //let element = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
-    //element.classList.add("greenplace-underline-waiting")
-
-    percentage.textContent = "--%"
+    // TODO set empty text first, and modify once we have score
+    percentage.textContent = "74%"
 
     footprint.appendChild(leaf)
     footprint.appendChild(pin)
@@ -475,7 +451,7 @@ async function createPanel(addresses, address_places, car_boolean) {
 
         let bikeDetails = document.createElement("div")
         bikeDetails.classList.add("bikeDetails")
-        bikeDetails.textContent = "- min"
+        bikeDetails.textContent = "0 min"
 
         let publicTransportIcon = document.createElement("img")
         publicTransportIcon.classList.add("publicTransportIcon")
@@ -487,7 +463,7 @@ async function createPanel(addresses, address_places, car_boolean) {
 
         let publicTransportDetails = document.createElement("div")
         publicTransportDetails.classList.add("publicTransportDetails")
-        publicTransportDetails.textContent = "- min"
+        publicTransportDetails.textContent = "0 min"
 
         // remove last bottom border
         if (i == address_places.length - 1) {
