@@ -17,7 +17,7 @@ function lookUpAddresses() {
     let length = elems.length
     for (var i = 0; i < length; ++i) {
         elems[i].getElementsByClassName("value")[0].id = DEFAULT_ID_PREFIX + i
-        addr = new Address(
+        let addr = new Address(
             elems[i].getElementsByClassName("value")[0].id,
         elems[i].getElementsByClassName("value")[0].textContent)
         arr.push(addr)
