@@ -55,7 +55,7 @@ function updateHTML(addresses, scores) {
     `
     document.getElementsByTagName('head')[0].appendChild(style)
     let length = addresses.length
-    for (var i = 0; i < length; ++i) {
+    for (let i = 0; i < length; ++i) {
         let parent = document.getElementById(addresses[i].id)
         parent.classList.add("address-parent")
 
@@ -81,6 +81,7 @@ function updateHTML(addresses, scores) {
                 event.target.style.backgroundColor = "rgba(220, 57, 55, 0.3)"
             }
 
+            browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[i]})
         })
 
         element.addEventListener("mouseout", function(event) {
