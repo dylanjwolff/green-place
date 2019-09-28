@@ -40,17 +40,17 @@ function updateHTML(addresses, scores) {
         .greenplace-underline-green {
             display: inline-block;
             border-bottom: 6px solid #4DD662;
-            border-radius: 8px;
+            border-radius: 5px;
         }
         .greenplace-underline-yellow {
             display: inline-block;
             border-bottom: 6px solid #FDE54D;
-            border-radius: 8px;
+            border-radius: 5px;
         }
         .greenplace-underline-red {
             display: inline-block;
             border-bottom: 6px solid #DC3937;
-            border-radius: 8px;
+            border-radius: 5px;
         }
     `
     document.getElementsByTagName('head')[0].appendChild(style)
