@@ -60,7 +60,12 @@ async function get_gps_all_addresses(all_places) {
     var allPromises = new Array()
     for (var place of all_places) {
         let prom = geoloc_place(place)
+        // prom.catch(() => {
+        // place.found=false
+        // })
+        // if(place.found){
         allPromises.push(prom);
+        // }
     }
     console.log("All gps computation launched:", allPromises)
     let pr = Promise.all(allPromises)

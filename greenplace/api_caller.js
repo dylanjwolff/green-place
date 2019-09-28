@@ -81,12 +81,13 @@ export async function geoloc_place(place) {
     const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${human_address}&format=json`, {
         cache: "force-cache"
     })
-    // console.log(`[${place.address}]Response:`, response)
+    console.log(`[${place.address}]Response:`, response)
     const resp_json = await response.json()
     // console.log(`[${place.address}]Resp_json:`, resp_json)
-    if (resp_json.length == 0){
+    if (resp_json.length == 0) {
+        console.log("Not found", place)
         place.found = false;
-    } else{
+    } else {
         place.found = true;
         const first_res = resp_json[0];
         // console.log(`[${place.address}]First res:`, first_res);
