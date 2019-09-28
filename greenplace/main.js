@@ -32,12 +32,37 @@ function computeMetrics(addresses) {
 }
 
 // List(eco-score) -> ()
-function updateHTML(scores) {
-
+function updateHTML(addresses, scores) {
+    let length = addresses.length
+    for (var i = 0; i < length; ++i) {
+        console.log(addresses[i].id)
+        element = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
+        element.classList.add("address")
+        element.style.backgroundColor = colorFromScore(0.7)
+        element.outerHTML = element.outerHTML.replace(/p/g, "span")
+    }
 }
+
+// score -> color
+// linear from red (0) to green (1)
+function colorFromScore(score) {
+    green = Math.floor(score * 255)
+    red = Math.floor((1 - score) * 255)
+    hex = "#" + rgbToHex(red) + rgbToHex(green) + "00"
+    return hex
+}
+
+// decimal (0 to 255, and +) -> hex
+var rgbToHex = function (rgb) {
+  var hex = Number(rgb).toString(16)
+  if (hex.length < 2) {
+       hex = "0".concat(hex)
+  }
+  return hex
+};
 
 
 // add arguments and stuff, etc
 addresses = lookUpAddresses()
 scores = computeMetrics(addresses)
-updateHTML(scores)
+updateHTML(addresses, scores)
