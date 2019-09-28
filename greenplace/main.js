@@ -56,6 +56,9 @@ function updateHTML(addresses, scores) {
     document.getElementsByTagName('head')[0].appendChild(style)
     let length = addresses.length
     for (var i = 0; i < length; ++i) {
+        let parent = document.getElementById(addresses[i].id)
+        parent.classList.add("address-parent")
+
         let element = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
         element.classList.add("address")
 
@@ -77,6 +80,28 @@ function updateHTML(addresses, scores) {
         image.style.marginTop = "23px"
         image.style.marginRight = "5px"
         document.getElementById(addresses[i].id).childNodes[0].prepend(image)
+    }
+}
+
+// List(address) -> ()
+function createPanel(addresses) {
+    var style = document.createElement("style")
+    style.id = "panel-style"
+
+    style.innerHTML = `
+        .address-parent .panel{
+            opacity: .5;
+        }
+    `;
+
+    document.head.appendChild(style)
+
+    for(var i = 0; i < addresses.length; ++i) {
+        let element = document.getElementById(addresses[i].id)
+        var panel = document.createElement("div")
+        panel.classList.add("panel")
+        panel.innerText = "Panel"
+        element.appendChild(panel)
     }
 }
 
@@ -104,9 +129,10 @@ var rgbToHex = function (rgb) {
 
 // add arguments and stuff, etc
 let addresses = lookUpAddresses()
+createPanel(addresses)
 let scores = computeMetrics(addresses)
 scores = Array.from({length: 40}, () => Math.random()) // TODO remove
 updateHTML(addresses, scores)
 
 // Example of how to call function from another file now that webpack is set up
-update()
+//update()
