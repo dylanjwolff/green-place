@@ -21,11 +21,12 @@ class BaseAddress {
     }
 }
 class OriginAddress extends BaseAddress {
-    constructor(id, address) {
+    constructor(id, address, parent_link) {
         super(address)
         this.id = id
         this.all_footprints = {}
         this.footprint = 1
+        this.parent_link = parent_link
     }
 }
 
@@ -41,7 +42,9 @@ class DestinationAddress extends BaseAddress {
 
 // () -> Array(Address)
 function lookUpAddresses() {
-    document.getElementById("resultItemPanel0").remove() // remove first ad
+    try {
+        document.getElementById("resultItemPanel0").remove() // remove first ad
+    } catch {}
 
     let elems = document.getElementsByClassName("list-item--address")
 
@@ -49,9 +52,13 @@ function lookUpAddresses() {
     let length = elems.length
     for (var i = 0; i < length; ++i) {
         elems[i].getElementsByClassName("value")[0].id = DEFAULT_ID_PREFIX + i
+        let ancestor_link = elems[i].closest("a")
+        //console.log(ancestor_link)
+
         let addr = new OriginAddress(
             elems[i].getElementsByClassName("value")[0].id,
-            elems[i].getElementsByClassName("value")[0].innerText.replace(/(?:\r\n|\r|\n)/g, ', '))
+            elems[i].getElementsByClassName("value")[0].innerText.replace(/(?:\r\n|\r|\n)/g, ', '),
+            ancestor_link.href)
         arr.push(addr)
     }
 
@@ -184,6 +191,7 @@ function updateHTML(addresses) {
 
         let element = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
         element.classList.add("address")
+
 
         element.addEventListener("mouseover", function (event) {
             var rect = event.target.getBoundingClientRect();
@@ -406,6 +414,7 @@ async function createPanel(addresses, address_places, car_boolean) {
 
     panel.style.transitionProperty = "opacity"
     panel.style.transitionDuration = ".15s"
+    panel.style.addresstransitionDuration = ".15s"
     panel.isMouseOver = false
 
     panel.addEventListener("onemouseover", function (event) {
@@ -581,6 +590,7 @@ function fillSummary(){
     for (let a of cached_adresses) {
         let row = document.createElement("div")
         row.classList.add("row")
+        row.style.padding = "20px";
 
         let grid_a = document.createElement("div")
         grid_a.classList.add("grid-4")
@@ -594,7 +604,7 @@ function fillSummary(){
         grid_b.classList.add("grid-4")
 
         grid_b.innerHTML = `
-            <a href=""> link to housing ad </a><hr>
+            <a href="${a.parent_link}"> ${a.parent_link} </a><hr>
         `
         row.appendChild(grid_b)
 
@@ -662,6 +672,7 @@ function createCheckout(){
 createSummary()
 createCheckout()
 
+
 /*
 let addresses = lookUpAddresses()
 createPanel(addresses)
@@ -674,6 +685,9 @@ browser.runtime.sendMessage({"request" : "sendAddresses"})
 
 // Main
 let startPlaces = lookUpAddresses()
+browser.runtime.sendMessage({"request" : "sendAddresses"})
+
+console.log("lookUp")
 let destPlaces = []
 browser.storage.local.get("address_places")
     .then((result) => {

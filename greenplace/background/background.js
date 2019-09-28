@@ -17,10 +17,14 @@ function notify(message) {
             currentAddresses.splice(idx, 1)
             break
         case "sendAddresses":
-            browser.tabs.query({active: true, currentWindow: true}, function (tabs) {
-                console.log(tabs[0].id)
-                browser.tabs.sendMessage(tabs[0].id, {"Adresses" : currentAddresses})
-            })
+            try {
+                browser.tabs.query({active: true, currentWindow: true}, function (tabs) {
+                    console.log(tabs[0].id)
+                    browser.tabs.sendMessage(tabs[0].id, {"Adresses": currentAddresses})
+                })
+            } catch {
+                console.log("null tabs")
+            }
             break
         default:
             console.log("bad request")
