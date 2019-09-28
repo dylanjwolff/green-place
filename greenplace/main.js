@@ -1,3 +1,5 @@
+import { update } from "./update.js"
+
 document.body.style.border = "5px solid red";
 
 let DEFAULT_ID_PREFIX = "green_place_"
@@ -41,3 +43,4 @@ function updateHTML(scores) {
 let addresses = lookUpAddresses()
 let scores = computeMetrics(addresses)
 updateHTML(scores)
+update()
