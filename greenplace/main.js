@@ -198,6 +198,8 @@ function createPanel(addresses) {
     let panel = document.createElement("div")
     let panelContent = document.createElement("div")
 
+    panel.style.transitionProperty = "opacity"
+    panel.style.transitionDuration = ".15s"
 
     panel.addEventListener("mouseover", function (event) {
         if (hover_on) {
