@@ -130,22 +130,85 @@ function createPanel(addresses) {
             position:fixed;
             display:block;
         }
-        
+
         .panel {
-            width:50%;
-            height:50%;
-            background-color:red;
+            margin-left: 700px;
+            margin-top: 100px;
+            width: 250px;
+            height: 400px;
+            background-color: white;
+            border-radius: 30px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+        }
+
+        .footprint {
+            position: relative;
+            width: 100%;
+            height: 35%;
+            background-color: #8fdb9d;
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            margin-top: 15%;
+            margin-left: 17%;
+            display: inline-block;
+        }
+
+        .pin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            margin-top: 5%;
+            margin-left: 81%;
+            display: inline-block;
+        }
+
+        .pin_selected {
+            box-shadow: 0 1px 18px 3px #7cc489 inset
+        }
+
+        .percentage {
+            position: absolute;
+            display: inline-block;
+            font-size: 50px;
+            margin-left: 50%;
+            margin-top: 20%;
         }
     `;
 
     document.head.appendChild(style)
 
     let panel = document.createElement("div")
-    panel.classList.add("panel")
-    panel.classList.add("overlay")
-    panel.id = "panel-id"
+    let footprint = document.createElement("div")
+    let leaf = document.createElement("img")
+    let pin = document.createElement("img")
+    let percentage = document.createElement("div")
 
-    panel.innerText = "Panel"
+    panel.id = "panel-id"
+    panel.classList.add("overlay")
+    panel.classList.add("panel")
+    footprint.classList.add("footprint")
+    leaf.classList.add("leaf")
+    pin.classList.add("pin")
+    pin.classList.add("pin_selected")
+    percentage.classList.add("percentage")
+
+    leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
+
+    pin.src = "http://simpleicon.com/wp-content/uploads/pin.png"
+
+    percentage.textContent = "74%"
+
+    footprint.appendChild(leaf)
+    footprint.appendChild(pin)
+    footprint.appendChild(percentage)
+    panel.appendChild(footprint)
+
     document.body.prepend(panel)
 
     /*window.onmousemove = function (event) {
