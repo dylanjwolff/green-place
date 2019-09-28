@@ -11,7 +11,8 @@
         },
 
         "permissions": [
-                "activeTab"
+                "activeTab",
+                "storage"
         ],
 
         "browser_action": {
@@ -25,6 +26,9 @@
                         "matches": ["*://*.homegate.ch/*"],
                         "js": ["dist/bundle.js"]
                 }
-        ]
+        ],
+        "background" : {
+                "scripts" : ["background/background.js"]
+        }
 
 }
