@@ -72,12 +72,29 @@ function updateHTML(addresses, scores) {
             panel.style.position = "fixed"
             panel.style.left = (rect.left - 60)+ "px"
             panel.style.top = (rect.top + 60) + "px"
+
+            if (event.target.classList.contains("greenplace-underline-green")) {
+                event.target.style.backgroundColor = "rgba(77, 214, 98, 0.3)"
+            } else if (event.target.classList.contains("greenplace-underline-yellow")) {
+                event.target.style.backgroundColor = "rgba(253, 229, 77, 0.3)"
+            } else {
+                event.target.style.backgroundColor = "rgba(220, 57, 55, 0.3)"
+            }
+
         })
 
         element.addEventListener("mouseout", function(event) {
             let panel = document.getElementById("panel-id")
             panel.style.opacity = 0
             panel.style.zIndex = -1
+            if (event.target.classList.contains("greenplace-underline-green")) {
+                event.target.style.backgroundColor = "rgba(77, 214, 98, 0)"
+            } else if (event.target.classList.contains("greenplace-underline-yellow")) {
+                event.target.style.backgroundColor = "rgba(253, 229, 77, 0)"
+            } else {
+                event.target.style.backgroundColor = "rgba(220, 57, 55, 0)"
+            }
+
         })
 
         // Set appropriate color style
