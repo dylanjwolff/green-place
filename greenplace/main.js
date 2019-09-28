@@ -66,8 +66,8 @@ function updateHTML(addresses, scores) {
 
         element.addEventListener("mouseover", function(event) {
             var rect = event.target.getBoundingClientRect();
-            console.log(rect.top, rect.right, rect.left, rect.bottom)
 
+            // Update the properties of the element
             let panel = document.getElementById("panel-id")
             panel.style.opacity = 1
             panel.style.zIndex = 200
@@ -77,11 +77,17 @@ function updateHTML(addresses, scores) {
 
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(77, 214, 98)"
             } else if (event.target.classList.contains("greenplace-underline-yellow")) {
                 event.target.style.backgroundColor = "rgba(253, 229, 77, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(253, 229, 77)"
             } else {
                 event.target.style.backgroundColor = "rgba(220, 57, 55, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(220, 57, 55)"
             }
+
+            // Update the content according to the address object
+            panel.childNodes[0].childNodes[0]
 
             browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[i]})
 
@@ -221,7 +227,6 @@ function createPanel(addresses) {
 
     panel.addEventListener("mouseleave", function (event) {
         hover_on = false
-        console.log("out")
         panel.style.zIndex = -1
         panel.style.opacity = 0
     });
