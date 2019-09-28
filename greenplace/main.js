@@ -92,6 +92,8 @@ function updateHTML(addresses, scores) {
             let panel = document.getElementById("panel-id")
             panel.style.opacity = 0
             //panel.style.zIndex = -1
+
+
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0)"
             } else if (event.target.classList.contains("greenplace-underline-yellow")) {
@@ -200,6 +202,15 @@ function createPanel(addresses) {
 
     panel.style.transitionProperty = "opacity"
     panel.style.transitionDuration = ".15s"
+    panel.isMouseOver = false
+
+    panel.addEventListener("onemouseover", function (event) {
+        panel.isMouseOver = true;
+    })
+
+    panel.addEventListener("onmouseleave", function (event) {
+        panel.isMouseOver = false;
+    })
 
     panel.addEventListener("mouseover", function (event) {
         if (hover_on) {
@@ -210,8 +221,9 @@ function createPanel(addresses) {
 
     panel.addEventListener("mouseleave", function (event) {
         hover_on = false
+        console.log("out")
+        panel.style.zIndex = -1
         panel.style.opacity = 0
-        panel.target.style.zIndex = -1
     });
 
     let footprint = document.createElement("div")
