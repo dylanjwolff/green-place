@@ -495,7 +495,7 @@ browser.storage.local.get("address_places")
                 console.log("About to create panel")
                 createPanel(startPlaces, destPlaces, result.car_boolean)
             })
-        if (destPlaces.length <= 0) {
+        if (destPlaces.length > 0) {
             computeMetrics(startPlaces, destPlaces).then(() => {
                 console.log("Updating html")
                 updateHTML(startPlaces)
