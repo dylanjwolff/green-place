@@ -12,10 +12,10 @@
 
         "permissions": [
                 "activeTab",
+                "storage",
                 "*://nominatim.openstreetmap.org/*",
                 "*://climate-api-test.dakar.moccu.net/*",
-                "*://api.tomtom.com/*",
-                "storage"
+                "*://api.tomtom.com/*"
         ],
 
         "browser_action": {

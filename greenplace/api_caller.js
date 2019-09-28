@@ -58,22 +58,34 @@ export async function calculate_distances(src, dst, mode = "car") {
         key: "AXsEsMCVKWN9Svf9spBR4y33MYxzaAXy",
         origins: origins,
         destinations: destinations,
-        travelMode: mode
+        travelMode: mode,
+        traffic: false
     })
-    return await req.go()
+
+    let tomtomRes = await req.go()
+    console.log("Tomtom res is ", tomtomRes)
+    return tomtomRes
 }
 
 /**
  * Take a human-readable address and modifies it to GPS (lat,lon) coordinates.
- * @param {string} address Human-readable address
+ * @param {Address} address Human-readable address
  */
-export async function get_gps_loc(address) {
-    // console.log(`Searching GPS loc of ${address}`)
-    if (address.indexOf(" ") > -1) {
-        address = encodeURI(address)
+export async function geoloc_place(place) {
+    // console.log(place)
+    let human_address = place.address
+    if (human_address.indexOf(" ") > -1) {
+        human_address = encodeURI(place.address)
     }
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${address}&format=json`)
+    // console.log(human_address)
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${human_address}&format=json`,{
+        cache: "force-cache"
+    })
+    // console.log(response)
     const resp_json = await response.json()
+    // console.log(resp_json)
     const first_res = resp_json[0]
-    return [first_res.lat, first_res.lon]
+    // console.log(first_res)
+    place.lat = first_res.lat
+    place.lon = first_res.lon
 }

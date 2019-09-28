@@ -1,22 +1,36 @@
 import {
     calculate_distances,
     calculate_car,
-    get_gps_loc
+    geoloc_place
 } from "./api_caller.js"
+class BaseAddress {
+    constructor(address) {
+        this.address = address
+    }
+}
 
+class OriginAddress extends BaseAddress {
+    constructor(id, address) {
+        super(address)
+        this.id = id
+        this.all_footprints = {}
+        this.footprint = 1
+    }
+}
+
+class DestinationAddress extends BaseAddress {
+    constructor(address, tag, freq) {
+        super(address)
+        this.freq = freq
+        this.tag = tag
+    }
+}
 let DEFAULT_ID_PREFIX = "green_place_"
 
 var hover_on = false;
 var current_selected_address = null;
 
-class Address {
-    constructor(id, address) {
-        this.id = id
-        this.address = address
-        this.all_footprints = {}
-        this.footprint = 1
-    }
-}
+
 
 // () -> Array(Address)
 function lookUpAddresses() {
@@ -26,7 +40,7 @@ function lookUpAddresses() {
     let length = elems.length
     for (var i = 0; i < length; ++i) {
         elems[i].getElementsByClassName("value")[0].id = DEFAULT_ID_PREFIX + i
-        let addr = new Address(
+        let addr = new OriginAddress(
             elems[i].getElementsByClassName("value")[0].id,
             elems[i].getElementsByClassName("value")[0].innerText.replace(/(?:\r\n|\r|\n)/g, ', '))
         arr.push(addr)
@@ -35,62 +49,75 @@ function lookUpAddresses() {
     return arr
 }
 
-// Array(Address) -> List(eco-score)
-async function computeMetrics(startingAddresses, destinationAddresses) {
-    console.log("Computing metrics")
-    let allPromises = Array()
-    //compute GPS localization for all addresses
-    const all_addresses = startingAddresses.concat(destinationAddresses)
-    for (let addr of all_addresses) {
-        var loc = get_gps_loc(addr.address)
-        loc.then(function (val) {
-            addr.lat = val[0];
-            addr.lon = val[1];
-        });
-        allPromises.push(loc);
+async function get_gps_all_addresses(all_places) {
+    console.log("Starting to localize all addresses")
+    var allPromises = new Array()
+    for (var place of all_places) {
+        let prom = geoloc_place(place)
+        allPromises.push(prom);
     }
-    Promise.all(allPromises).then(function () {
-        console.log(startingAddresses)
-        allPromises = Array()
-        calculate_distances(startingAddresses, destinationAddresses, 'car').then(function (distances) {
-            for (var row in distances) {
-                for (var col in distances[row]) {
-                    console.log("Computing carbon for", startingAddresses[row].id, destinationAddresses[col].id)
-                    let carbonPromise = calculate_car(distances[row][col].routeSummary.lengthInMeters / 1000)
-                    allPromises.push(carbonPromise)
-                }
-            }
-        })
-        setTimeout(function () {
-            Promise.all(allPromises).then(function (all_carbons) {
-                let max_carbon = 0;
-                console.log("Assigning carbon to paths, ", all_carbons)
-                for (var i = 0; i < all_carbons.length; i++) {
-                    console.log("Looking at carbon", i, destinationAddresses, destinationAddresses.length)
-                    let col = i % destinationAddresses.length
-                    let row = Math.floor(i / destinationAddresses.length)
-                    console.log(`assigning carbon to [${row},${col}]`)
-                    startingAddresses[row].all_footprints[destinationAddresses[col].id] = all_carbons[i]
-                    if (all_carbons[i] > max_carbon){
-                        max_carbon = all_carbons[i]
-                    }
-                }
-                console.log("Sources addresses have become", startingAddresses)
-                normalize(startingAddresses, max_carbon);
-                updateHTML(startingAddresses)
-            });
-        }, 5000);
-
-    }).catch(error => function () {
-        console.log("Errors in promises:", error)
-    });
+    console.log("All gps computation launched:", allPromises)
+    let pr = Promise.all(allPromises)
+    console.log("inside pr=", pr)
+    return pr
 }
 
-function normalize(startingAddresses, max_carbon){
+// Array(Address) -> List(eco-score)
+async function computeMetrics(startPlaces, dstPlaces) {
+    console.log("Computing metrics")
+    //compute GPS localization for all addresses
+    const allPlaces = startPlaces.concat(dstPlaces);
+    let pr = await get_gps_all_addresses(allPlaces);
+
+    //wait for all geoloc to be over
+    await Promise.all(pr)
+
+    //Compute the distance matrix
+    let allPromises = new Array()
+    const carDistances = await calculate_distances(startPlaces, dstPlaces, 'car')
+
+    //compute the car carbon footprint for each
+    for (var row in carDistances) {
+        for (var col in carDistances[row]) {
+            console.log("Computing carbon for", startPlaces[row].id, dstPlaces[col].tag)
+            let carbonPromise = calculate_car(carDistances[row][col].routeSummary.lengthInMeters / 1000)
+            allPromises.push(carbonPromise)
+        }
+    }
+    let allCarbons = await Promise.all(allPromises)
+    console.log("Assigning carbon to paths, ", allCarbons)
+    for (var i = 0; i < allCarbons.length; i++) {
+        //determine equivalent to matrix view
+        let col = i % dstPlaces.length
+        let row = Math.floor(i / dstPlaces.length)
+
+        startPlaces[row].all_footprints[dstPlaces[col].tag] = allCarbons[i]
+    }
+
+    //update footprint with weighted average
+    for (let place of startPlaces) {
+        let globalFootprint = 0
+        console.log("Computing footprint for", place)
+        for (const dstTag in place.all_footprints) {
+            const tagFreq = dstPlaces.filter((el) => {
+                return el.tag == dstTag
+            })[0].freq
+            console.log("Corresponding freq is ", tagFreq)
+            globalFootprint += place.all_footprints[dstTag] * tagFreq
+            console.log("Global footprint is", globalFootprint)
+        }
+        console.log("Setting footprint:", globalFootprint)
+        place.footprint = globalFootprint
+    }
+    console.log("Sources addresses have become", startPlaces)
+    // normalize(startPlaces, max_carbon);
+}
+
+function normalize(startingAddresses, max_carbon) {
     console.log("Normalizing")
-    for(var i in startingAddresses){
-        for(var target in startingAddresses[i].all_footprints){
-            startingAddresses[i].all_footprints[target] = startingAddresses[i].all_footprints[target]/max_carbon;
+    for (var i in startingAddresses) {
+        for (var target in startingAddresses[i].all_footprints) {
+            startingAddresses[i].all_footprints[target] = startingAddresses[i].all_footprints[target] / max_carbon;
             startingAddresses[i].footprint = startingAddresses[i].all_footprints[target];
         }
     }
@@ -125,7 +152,7 @@ function updateHTML(addresses) {
         let element = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
         element.classList.add("address")
 
-        element.addEventListener("mouseover", function(event) {
+        element.addEventListener("mouseover", function (event) {
             var rect = event.target.getBoundingClientRect();
 
             // Update the properties of the element
@@ -133,7 +160,7 @@ function updateHTML(addresses) {
             panel.style.opacity = 1
             panel.style.zIndex = 200
             panel.style.position = "fixed"
-            panel.style.left = (rect.left - 60)+ "px"
+            panel.style.left = (rect.left - 60) + "px"
             panel.style.top = (rect.top + 40) + "px"
 
             current_selected_address = i
@@ -153,7 +180,7 @@ function updateHTML(addresses) {
             hover_on = true
         })
 
-        element.addEventListener("mouseout", function(event) {
+        element.addEventListener("mouseout", function (event) {
             let panel = document.getElementById("panel-id")
             panel.style.opacity = 0
 
@@ -188,10 +215,10 @@ function updateHTML(addresses) {
 }
 
 // List(address) -> ()
-function createPanel(addresses, address_places) {
+async function createPanel(addresses, address_places) {
+    console.log("GOT HERE!")
     var style = document.createElement("style")
     style.id = "panel-style"
-
     style.innerHTML = `
         .panel-content {
             position: relative;
@@ -355,10 +382,16 @@ function createPanel(addresses, address_places) {
     pin.addEventListener("onmousedown", function (event) {
         if (!pin.classList.contains("pin_selected")) {
             pin.classList.add("pin_selected")
-            browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[current_selected_address]})
+            browser.runtime.sendMessage({
+                "request": "addAddress",
+                "address": addresses[current_selected_address]
+            })
         } else {
             pin.classList.remove("pin_selected")
-            browser.runtime.sendMessage({"request": "removeAddress", "address" : addresses[current_selected_address]})
+            browser.runtime.sendMessage({
+                "request": "removeAddress",
+                "address": addresses[current_selected_address]
+            })
         }
     });
     let percentage = document.createElement("div")
@@ -375,7 +408,7 @@ function createPanel(addresses, address_places) {
 
     leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
 
-    pin.src = "http://simpleicon.com/wp-content/uploads/pin.png"
+    pin.src = "https://simpleicon.com/wp-content/uploads/pin.png"
 
     // TODO set empty text first, and modify once we have score
     percentage.textContent = "74%"
@@ -433,12 +466,16 @@ function createPanel(addresses, address_places) {
 }
 
 // Main
-let addresses = lookUpAddresses()
+let startPlaces = lookUpAddresses()
+let destPlaces = undefined
 browser.storage.local.get("address_places")
-    .then( (result) => {
-        let address_places = result.address_places
-        createPanel(addresses, address_places)
+    .then((result) => {
+        destPlaces = result.address_places
+        console.log(destPlaces)
+        createPanel(startPlaces, destPlaces)
+        computeMetrics(startPlaces, destPlaces).then(() => {
+            console.log("Updating html")
+            updateHTML(startPlaces)
+        })
     })
-    .catch( e => console.log("Storage init failure! " + e));
-computeMetrics(addresses)
-updateHTML(addresses)
+    .catch(error => console.log("Storage init failure! " + error));
