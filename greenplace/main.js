@@ -3,12 +3,20 @@ import {
     calculate_car,
     geoloc_place
 } from "./api_caller.js"
+import {
+    nearby
+} from "./nearby.js"
+
+let DEFAULT_ID_PREFIX = "green_place_"
+
+var hover_on = false;
+var current_selected_address = null;
+
 class BaseAddress {
     constructor(address) {
         this.address = address
     }
 }
-
 class OriginAddress extends BaseAddress {
     constructor(id, address) {
         super(address)
@@ -25,15 +33,13 @@ class DestinationAddress extends BaseAddress {
         this.tag = tag
     }
 }
-let DEFAULT_ID_PREFIX = "green_place_"
-
-var hover_on = false;
-var current_selected_address = null;
 
 
 
 // () -> Array(Address)
 function lookUpAddresses() {
+    document.getElementById("resultItemPanel0").remove() // remove first ad
+
     let elems = document.getElementsByClassName("list-item--address")
 
     var arr = new Array()
@@ -215,8 +221,7 @@ function updateHTML(addresses) {
 }
 
 // List(address) -> ()
-async function createPanel(addresses, address_places) {
-    console.log("GOT HERE!")
+async function createPanel(addresses, address_places, car_boolean) {
     var style = document.createElement("style")
     style.id = "panel-style"
     style.innerHTML = `
@@ -441,7 +446,11 @@ async function createPanel(addresses, address_places) {
 
         let publicTransportIcon = document.createElement("img")
         publicTransportIcon.classList.add("publicTransportIcon")
-        publicTransportIcon.src = "https://cdn4.iconfinder.com/data/icons/aiga-symbol-signs/439/Aiga_bus-512.png"
+        if (car_boolean) {
+            publicTransportIcon.src = "https://static.thenounproject.com/png/72-200.png"
+        } else {
+            publicTransportIcon.src = "https://cdn4.iconfinder.com/data/icons/aiga-symbol-signs/439/Aiga_bus-512.png"
+        }
 
         let publicTransportDetails = document.createElement("div")
         publicTransportDetails.classList.add("publicTransportDetails")
@@ -472,7 +481,10 @@ browser.storage.local.get("address_places")
     .then((result) => {
         destPlaces = result.address_places
         console.log(destPlaces)
-        createPanel(startPlaces, destPlaces)
+        browser.storage.local.get("car_boolean")
+            .then((result) => {
+                createPanel(startPlaces, destPlaces, result.car_boolean)
+            })
         computeMetrics(startPlaces, destPlaces).then(() => {
             console.log("Updating html")
             updateHTML(startPlaces)

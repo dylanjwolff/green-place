@@ -20,6 +20,7 @@ class DestinationAddress extends BaseAddress {
         this.tag = tag
     }
 }
+
 function add_row_to_display(tag, address, freq) {
     let table = document.getElementById("myTable");
     let row = table.insertRow();
@@ -84,6 +85,41 @@ function listenForClicks() {
     })
 }
 
+var input = document.getElementById('toggleswitch');
+var outputText = document.getElementById('status');
+
+input.addEventListener('change', function () {
+    if (this.checked) {
+        browser.storage.local.set({
+                car_boolean: true
+            })
+            .catch((e) => console.log("Storage add error " + e))
+        outputText.innerHTML = "I have a car"
+    } else {
+        browser.storage.local.set({
+                car_boolean: false
+            })
+            .catch((e) => console.log("Storage add error " + e))
+        outputText.innerHTML = "I don't have a car"
+    }
+});
+
+var inputGrocery = document.getElementById("groceryswitch")
+
+inputGrocery.addEventListener("change", function () {
+    if (this.checked) {
+        browser.storage.local.set({
+                grocery_boolean: true
+            })
+            .catch((e) => console.log("Storage add error " + e))
+    } else {
+        browser.storage.local.set({
+                grocery_boolean: false
+            })
+            .catch((e) => console.log("Storage add error " + e))
+    }
+})
+
 browser.storage.local.get("address_places")
     .then((result) => {
         let address_places = result.address_places
@@ -93,8 +129,43 @@ browser.storage.local.get("address_places")
     })
     .catch(() => {
         return browser.storage.local.set({
-            address_places: []
+                address_places: []
+            })
+            .catch(() => {
+                return browser.storage.local.set({
+                    address_places: []
+                })
+            })
+            .then(() => listenForClicks())
+            .catch(e => console.log("Storage init failure! " + e));
+    });
+
+
+browser.storage.local.get("car_boolean")
+    .then((result) => {
+        let car_boolean = result.car_boolean
+        input.checked = car_boolean
+        if (car_boolean) {
+            outputText.innerHTML = "I have a car"
+        } else {
+            outputText.innerHTML = "I don't have a car"
+        }
+    })
+    .catch(() => {
+        return browser.storage.local.set({
+            car_boolean: false
         })
     })
-    .then(() => listenForClicks())
-    .catch(e => console.log("Storage init failure! " + e));
+    .catch((e) => console.log("Storage add error " + e))
+
+
+browser.storage.local.get("grocery_boolean")
+    .then((result) => {
+        inputGrocery.checked = result.grocery_boolean
+    })
+    .catch(() => {
+        return browser.storage.local.set({
+            grocery_boolean: false
+        })
+    })
+    .catch((e) => console.log("Storage add error " + e))
