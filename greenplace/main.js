@@ -89,20 +89,28 @@ function createPanel(addresses) {
     style.id = "panel-style"
 
     style.innerHTML = `
-        .address-parent .panel{
+        .overlay {
             opacity: .5;
+            z-index:200;
+            position:fixed;
+            display:block;
+        }
+        
+        .panel {
+            width:50%;
+            height:50%;
+            background-color:red;
         }
     `;
 
     document.head.appendChild(style)
 
-    for(var i = 0; i < addresses.length; ++i) {
-        let element = document.getElementById(addresses[i].id)
-        var panel = document.createElement("div")
-        panel.classList.add("panel")
-        panel.innerText = "Panel"
-        element.appendChild(panel)
-    }
+    let panel = document.createElement("div")
+    panel.classList.add("panel")
+    panel.classList.add("overlay")
+
+    panel.innerText = "Panel"
+    document.body.prepend(panel)
 }
 
 // score -> color
