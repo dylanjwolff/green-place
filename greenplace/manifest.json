@@ -16,6 +16,10 @@
                 "*://nominatim.openstreetmap.org/*",
                 "*://climate-api-test.dakar.moccu.net/*",
                 "*://api.tomtom.com/*",
+                "storage",
+                "tabs",
+                "webRequest",
+                "<all_urls>",
                 "*://maps.googleapis.com/maps/api/place/*",
                 "storage"
         ],
