@@ -69,6 +69,18 @@ input.addEventListener('change', function() {
     }
 });
 
+var inputGrocery = document.getElementById("groceryswitch")
+
+inputGrocery.addEventListener("change", function() {
+    if (this.checked) {
+        browser.storage.local.set({grocery_boolean: true})
+            .catch( (e) => console.log("Storage add error " + e))
+    } else {
+        browser.storage.local.set({grocery_boolean: false})
+            .catch( (e) => console.log("Storage add error " + e))
+    }
+})
+
 browser.storage.local.get("address_places")
         .then( (result) => {
                 let address_places = result.address_places
@@ -93,5 +105,14 @@ browser.storage.local.get("car_boolean")
     })
     .catch ( () => {
         return browser.storage.local.set({car_boolean: false})
+    })
+    .catch( (e) => console.log("Storage add error " + e) )
+
+browser.storage.local.get("grocery_boolean")
+    .then( (result) => {
+        inputGrocery.checked = result.grocery_boolean
+    })
+    .catch ( () => {
+        return browser.storage.local.set({grocery_boolean: false})
     })
     .catch( (e) => console.log("Storage add error " + e) )
