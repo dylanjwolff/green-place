@@ -188,7 +188,7 @@ function updateHTML(addresses) {
 }
 
 // List(address) -> ()
-function createPanel(addresses, address_places) {
+function createPanel(addresses, address_places, car_boolean) {
     var style = document.createElement("style")
     style.id = "panel-style"
 
@@ -408,7 +408,11 @@ function createPanel(addresses, address_places) {
 
         let publicTransportIcon = document.createElement("img")
         publicTransportIcon.classList.add("publicTransportIcon")
-        publicTransportIcon.src = "https://cdn4.iconfinder.com/data/icons/aiga-symbol-signs/439/Aiga_bus-512.png"
+        if (car_boolean) {
+            publicTransportIcon.src = "https://static.thenounproject.com/png/72-200.png"
+        } else {
+            publicTransportIcon.src = "https://cdn4.iconfinder.com/data/icons/aiga-symbol-signs/439/Aiga_bus-512.png"
+        }
 
         let publicTransportDetails = document.createElement("div")
         publicTransportDetails.classList.add("publicTransportDetails")
@@ -437,7 +441,10 @@ let addresses = lookUpAddresses()
 browser.storage.local.get("address_places")
     .then( (result) => {
         let address_places = result.address_places
-        createPanel(addresses, address_places)
+        browser.storage.local.get("car_boolean")
+            .then( (result) => {
+                createPanel(addresses, address_places, result.car_boolean)
+            })
     })
     .catch( e => console.log("Storage init failure! " + e));
 computeMetrics(addresses)
