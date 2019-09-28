@@ -1,13 +1,20 @@
-import { update } from "./update.js"
-
-document.body.style.border = "5px solid red";
+import {
+    calculate_distances,
+    calculate_car,
+    get_gps_loc
+} from "./api_caller.js"
 
 let DEFAULT_ID_PREFIX = "green_place_"
+
+var hover_on = false;
+var current_selected_address = null;
 
 class Address {
     constructor(id, address) {
         this.id = id
         this.address = address
+        this.all_footprints = {}
+        this.footprint = 1
     }
 }
 
@@ -21,7 +28,7 @@ function lookUpAddresses() {
         elems[i].getElementsByClassName("value")[0].id = DEFAULT_ID_PREFIX + i
         let addr = new Address(
             elems[i].getElementsByClassName("value")[0].id,
-        elems[i].getElementsByClassName("value")[0].textContent)
+            elems[i].getElementsByClassName("value")[0].innerText.replace(/(?:\r\n|\r|\n)/g, ', '))
         arr.push(addr)
     }
 
@@ -29,12 +36,68 @@ function lookUpAddresses() {
 }
 
 // Array(Address) -> List(eco-score)
-function computeMetrics(addresses) {
-    return 0.5
+async function computeMetrics(startingAddresses, destinationAddresses) {
+    console.log("Computing metrics")
+    let allPromises = Array()
+    //compute GPS localization for all addresses
+    const all_addresses = startingAddresses.concat(destinationAddresses)
+    for (let addr of all_addresses) {
+        var loc = get_gps_loc(addr.address)
+        loc.then(function (val) {
+            addr.lat = val[0];
+            addr.lon = val[1];
+        });
+        allPromises.push(loc);
+    }
+    Promise.all(allPromises).then(function () {
+        console.log(startingAddresses)
+        allPromises = Array()
+        calculate_distances(startingAddresses, destinationAddresses, 'car').then(function (distances) {
+            for (var row in distances) {
+                for (var col in distances[row]) {
+                    console.log("Computing carbon for", startingAddresses[row].id, destinationAddresses[col].id)
+                    let carbonPromise = calculate_car(distances[row][col].routeSummary.lengthInMeters / 1000)
+                    allPromises.push(carbonPromise)
+                }
+            }
+        })
+        setTimeout(function () {
+            Promise.all(allPromises).then(function (all_carbons) {
+                let max_carbon = 0;
+                console.log("Assigning carbon to paths, ", all_carbons)
+                for (var i = 0; i < all_carbons.length; i++) {
+                    console.log("Looking at carbon", i, destinationAddresses, destinationAddresses.length)
+                    let col = i % destinationAddresses.length
+                    let row = Math.floor(i / destinationAddresses.length)
+                    console.log(`assigning carbon to [${row},${col}]`)
+                    startingAddresses[row].all_footprints[destinationAddresses[col].id] = all_carbons[i]
+                    if (all_carbons[i] > max_carbon){
+                        max_carbon = all_carbons[i]
+                    }
+                }
+                console.log("Sources addresses have become", startingAddresses)
+                normalize(startingAddresses, max_carbon);
+                updateHTML(startingAddresses)
+            });
+        }, 5000);
+
+    }).catch(error => function () {
+        console.log("Errors in promises:", error)
+    });
+}
+
+function normalize(startingAddresses, max_carbon){
+    console.log("Normalizing")
+    for(var i in startingAddresses){
+        for(var target in startingAddresses[i].all_footprints){
+            startingAddresses[i].all_footprints[target] = startingAddresses[i].all_footprints[target]/max_carbon;
+            startingAddresses[i].footprint = startingAddresses[i].all_footprints[target];
+        }
+    }
 }
 
 // List(eco-score) -> ()
-function updateHTML(addresses, scores) {
+function updateHTML(addresses) {
     var style = document.createElement("style")
     style.innerHTML = `
         .greenplace-underline-green {
@@ -55,7 +118,7 @@ function updateHTML(addresses, scores) {
     `
     document.getElementsByTagName('head')[0].appendChild(style)
     let length = addresses.length
-    for (var i = 0; i < length; ++i) {
+    for (let i = 0; i < length; ++i) {
         let parent = document.getElementById(addresses[i].id)
         parent.classList.add("address-parent")
 
@@ -64,29 +127,36 @@ function updateHTML(addresses, scores) {
 
         element.addEventListener("mouseover", function(event) {
             var rect = event.target.getBoundingClientRect();
-            console.log(rect.top, rect.right, rect.left, rect.bottom)
 
+            // Update the properties of the element
             let panel = document.getElementById("panel-id")
             panel.style.opacity = 1
             panel.style.zIndex = 200
             panel.style.position = "fixed"
             panel.style.left = (rect.left - 60)+ "px"
-            panel.style.top = (rect.top + 60) + "px"
+            panel.style.top = (rect.top + 40) + "px"
+
+            current_selected_address = i
 
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgba(77, 214, 98, .7)"
             } else if (event.target.classList.contains("greenplace-underline-yellow")) {
                 event.target.style.backgroundColor = "rgba(253, 229, 77, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgba(253, 229, 77, .7)"
             } else {
                 event.target.style.backgroundColor = "rgba(220, 57, 55, 0.3)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgba(220, 57, 55, .7)"
             }
 
+            // Update the content according to the address object
+            hover_on = true
         })
 
         element.addEventListener("mouseout", function(event) {
             let panel = document.getElementById("panel-id")
             panel.style.opacity = 0
-            panel.style.zIndex = -1
+
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0)"
             } else if (event.target.classList.contains("greenplace-underline-yellow")) {
@@ -94,11 +164,10 @@ function updateHTML(addresses, scores) {
             } else {
                 event.target.style.backgroundColor = "rgba(220, 57, 55, 0)"
             }
-
         })
 
         // Set appropriate color style
-        let score = scores[i]
+        let score = addresses[i].footprint
         if (score >= 0.7) {
             element.classList.add("greenplace-underline-red")
         } else if (score >= 0.4) {
@@ -124,19 +193,28 @@ function createPanel(addresses, address_places) {
     style.id = "panel-style"
 
     style.innerHTML = `
-        .overlay {
+        .panel-content {
+            position: relative;
+            background-color: white;
+            background-clip: content-box;
+            border-radius: 30px;
+            height: ` + (80 + 130 * address_places.length) + `px;
+        }
+        #panel-id {
             opacity: 0;
-            z-index:200;
-            position:fixed;
+            position : fixed;
+        }
+
+        .overlay {
+            z-index: 199;
+            position:relative;
             display:block;
         }
 
         .panel {
-            background-color: white;
+            padding-top:20px;
             width: 250px;
-            height: ` + (80 + 130 * address_places.length) + `px;
-            border-radius: 30px;
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            box-sizing: padding-box;
         }
 
         .footprint {
@@ -242,18 +320,58 @@ function createPanel(addresses, address_places) {
     document.head.appendChild(style)
 
     let panel = document.createElement("div")
+    let panelContent = document.createElement("div")
+
+    panel.style.transitionProperty = "opacity"
+    panel.style.transitionDuration = ".15s"
+    panel.isMouseOver = false
+
+    panel.addEventListener("onemouseover", function (event) {
+        panel.isMouseOver = true;
+    })
+
+    panel.addEventListener("onmouseleave", function (event) {
+        panel.isMouseOver = false;
+    })
+
+    panel.addEventListener("mouseover", function (event) {
+        if (hover_on) {
+            panel.style.opacity = 1
+            panel.target.style.zIndex = 200
+        }
+    });
+
+    panel.addEventListener("mouseleave", function (event) {
+        hover_on = false
+        panel.style.zIndex = -1
+        panel.style.opacity = 0
+    });
+
     let footprint = document.createElement("div")
     let leaf = document.createElement("img")
     let pin = document.createElement("img")
+    pin.id = "pin"
+
+    pin.addEventListener("onmousedown", function (event) {
+        if (!pin.classList.contains("pin_selected")) {
+            pin.classList.add("pin_selected")
+            browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[current_selected_address]})
+        } else {
+            pin.classList.remove("pin_selected")
+            browser.runtime.sendMessage({"request": "removeAddress", "address" : addresses[current_selected_address]})
+        }
+    });
     let percentage = document.createElement("div")
 
     panel.id = "panel-id"
-    panel.classList.add("overlay")
-    panel.classList.add("panel")
+    panelContent.id = "panel-content"
     footprint.classList.add("footprint")
     leaf.classList.add("leaf")
     pin.classList.add("pin")
     percentage.classList.add("percentage")
+    panelContent.classList.add("panel-content")
+    panelContent.classList.add("overlay")
+    panelContent.classList.add("panel")
 
     leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
 
@@ -265,7 +383,9 @@ function createPanel(addresses, address_places) {
     footprint.appendChild(leaf)
     footprint.appendChild(pin)
     footprint.appendChild(percentage)
-    panel.appendChild(footprint)
+    panelContent.appendChild(footprint)
+
+    panel.appendChild(panelContent)
 
     let details = document.createElement("ul")
     details.classList.add("details")
@@ -307,50 +427,18 @@ function createPanel(addresses, address_places) {
         details.appendChild(destinationCard)
     }
 
-    panel.appendChild(details)
+    panelContent.appendChild(details)
 
     document.body.prepend(panel)
-
-    /*window.onmousemove = function (event) {
-        var x = event.clientX,
-            y = event.clientY
-        panel.style.top = (y + 20) + "px"
-        panel.style.left = (x + 20) + "px"
-    }*/
-}
-
-function createDestinationEmptySubPanel() {
-    let destinationDiv = document.createElement("div")
-    destinationDiv.classList.add("destination")
-}
-
-// score -> color
-// linear from red (0) to green (1)
-function colorFromScore(score, classList) {
-    if (score >= 0.7) {
-        return classList.add("greenplace-underline-green")
-    } else if (score >= 0.4) {
-        return element.classList.add("greenplace-underline-yellow")
-    } else {
-        return element.classList.add("greenplace-underline-red")
-    }
 }
 
 // Main
-
 let addresses = lookUpAddresses()
-
 browser.storage.local.get("address_places")
     .then( (result) => {
         let address_places = result.address_places
         createPanel(addresses, address_places)
     })
     .catch( e => console.log("Storage init failure! " + e));
-
-let scores = computeMetrics(addresses)
-
-//updatePanel(addresses, scores)
-
-scores = Array.from({length: 40}, () => Math.random()) // TODO remove
-
-updateHTML(addresses, scores)
+computeMetrics(addresses)
+updateHTML(addresses)
