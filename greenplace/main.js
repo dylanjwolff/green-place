@@ -485,18 +485,21 @@ async function createPanel(addresses, address_places, car_boolean) {
 
 // Main
 let startPlaces = lookUpAddresses()
-let destPlaces = undefined
+let destPlaces = []
 browser.storage.local.get("address_places")
     .then((result) => {
         destPlaces = result.address_places
         console.log(destPlaces)
         browser.storage.local.get("car_boolean")
             .then((result) => {
+                console.log("About to create panel")
                 createPanel(startPlaces, destPlaces, result.car_boolean)
             })
-        computeMetrics(startPlaces, destPlaces).then(() => {
-            console.log("Updating html")
-            updateHTML(startPlaces)
-        })
+        if (destPlaces.length <= 0) {
+            computeMetrics(startPlaces, destPlaces).then(() => {
+                console.log("Updating html")
+                updateHTML(startPlaces)
+            })
+        }
     })
     .catch(error => console.log("Storage init failure! " + error));
