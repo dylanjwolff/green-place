@@ -422,7 +422,7 @@ async function createPanel(addresses, address_places, car_boolean) {
 
     leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
 
-    pin.src = "https://simpleicon.com/wp-content/uploads/pin.png"
+    pin.src = "https://cdn3.iconfinder.com/data/icons/pix-glyph-set/50/520769-paper_pin-512.png"
 
     // TODO set empty text first, and modify once we have score
     percentage.textContent = "74%"
