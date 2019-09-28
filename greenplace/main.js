@@ -5,6 +5,7 @@ document.body.style.border = "5px solid red";
 let DEFAULT_ID_PREFIX = "green_place_"
 
 var hover_on = false;
+var current_selected_address = null;
 
 class Address {
     constructor(id, address) {
@@ -75,21 +76,20 @@ function updateHTML(addresses, scores) {
             panel.style.left = (rect.left - 60)+ "px"
             panel.style.top = (rect.top + 40) + "px"
 
+            current_selected_address = i
+
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0.3)"
-                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(77, 214, 98)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgba(77, 214, 98, .7)"
             } else if (event.target.classList.contains("greenplace-underline-yellow")) {
                 event.target.style.backgroundColor = "rgba(253, 229, 77, 0.3)"
-                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(253, 229, 77)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgba(253, 229, 77, .7)"
             } else {
                 event.target.style.backgroundColor = "rgba(220, 57, 55, 0.3)"
-                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgb(220, 57, 55)"
+                panel.childNodes[0].childNodes[0].style.backgroundColor = "rgba(220, 57, 55, .7)"
             }
 
             // Update the content according to the address object
-            panel.childNodes[0].childNodes[0]
-
-            browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[i]})
 
             hover_on = true
         })
@@ -234,6 +234,17 @@ function createPanel(addresses) {
     let footprint = document.createElement("div")
     let leaf = document.createElement("img")
     let pin = document.createElement("img")
+    pin.id = "pin"
+
+    pin.addEventListener("onclick", function (event) {
+        if (!pin.classList.contains("pin_selected")) {
+            pin.classList.add("pin_selected")
+            browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[current_selected_address]})
+        } else {
+            pin.classList.remove("pin_selected")
+            browser.runtime.sendMessage({"request": "removeAddress", "address" : addresses[current_selected_address]})
+        }
+    });
     let percentage = document.createElement("div")
 
     panel.id = "panel-id"
