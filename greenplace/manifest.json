@@ -12,13 +12,16 @@
 
         "permissions": [
                 "activeTab",
+                "storage",
                 "*://nominatim.openstreetmap.org/*",
                 "*://climate-api-test.dakar.moccu.net/*",
                 "*://api.tomtom.com/*",
                 "storage",
                 "tabs",
                 "webRequest",
-                "<all_urls>"
+                "<all_urls>",
+                "*://maps.googleapis.com/maps/api/place/*",
+                "storage"
         ],
 
         "browser_action": {
@@ -27,14 +30,12 @@
                 "default_popup": "popup/greenplace.html"
         },
 
-        "content_scripts": [
-                {
-                        "matches": ["*://*.homegate.ch/*"],
-                        "js": ["dist/bundle.js"]
-                }
-        ],
-        "background" : {
-                "scripts" : ["background/background.js"]
+        "content_scripts": [{
+                "matches": ["<all_urls>"],
+                "js": ["dist/bundle.js"]
+        }],
+        "background": {
+                "scripts": ["background/background.js"]
         }
 
 }
