@@ -45,6 +45,7 @@ export async function calculate_distances(src, dst, mode = "car") {
             }
         })
     }
+    console.log("Origins points created")
     var destinations = Array()
     for (var addr of dst) {
         destinations.push({
@@ -54,6 +55,7 @@ export async function calculate_distances(src, dst, mode = "car") {
             }
         })
     }
+    console.log("Destination points created")
     var req = tomtom.services.matrixRouting({
         key: "AXsEsMCVKWN9Svf9spBR4y33MYxzaAXy",
         origins: origins,
@@ -61,7 +63,7 @@ export async function calculate_distances(src, dst, mode = "car") {
         travelMode: mode,
         traffic: false
     })
-
+    console.log("Tomtom req", req)
     let tomtomRes = await req.go()
     console.log("Tomtom res is ", tomtomRes)
     return tomtomRes

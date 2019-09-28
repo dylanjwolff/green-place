@@ -461,7 +461,7 @@ async function createPanel(addresses, address_places, car_boolean) {
 
     leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
 
-    pin.src = "https://simpleicon.com/wp-content/uploads/pin.png"
+    pin.src = "https://cdn3.iconfinder.com/data/icons/pix-glyph-set/50/520769-paper_pin-512.png"
 
     // TODO set empty text first, and modify once we have score
     percentage.textContent = "74%"
@@ -674,18 +674,21 @@ browser.runtime.sendMessage({"request" : "sendAddresses"})
 
 // Main
 let startPlaces = lookUpAddresses()
-let destPlaces = undefined
+let destPlaces = []
 browser.storage.local.get("address_places")
     .then((result) => {
         destPlaces = result.address_places
         console.log(destPlaces)
         browser.storage.local.get("car_boolean")
             .then((result) => {
+                console.log("About to create panel")
                 createPanel(startPlaces, destPlaces, result.car_boolean)
             })
-        computeMetrics(startPlaces, destPlaces).then(() => {
-            console.log("Updating html")
-            updateHTML(startPlaces)
-        })
+        if (destPlaces.length > 0) {
+            computeMetrics(startPlaces, destPlaces).then(() => {
+                console.log("Updating html")
+                updateHTML(startPlaces)
+            })
+        }
     })
     .catch(error => console.log("Storage init failure! " + error));
