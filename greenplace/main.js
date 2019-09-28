@@ -119,7 +119,7 @@ function updateHTML(addresses, scores) {
 }
 
 // List(address) -> ()
-function createPanel(addresses) {
+function createPanel(addresses, address_places) {
     var style = document.createElement("style")
     style.id = "panel-style"
 
@@ -134,7 +134,7 @@ function createPanel(addresses) {
         .panel {
             background-color: white;
             width: 250px;
-            height: 400px;
+            height: ` + (80 + 130 * address_places.length) + `px;
             border-radius: 30px;
             box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
         }
@@ -142,7 +142,7 @@ function createPanel(addresses) {
         .footprint {
             position: relative;
             width: 100%;
-            height: 35%;
+            height: 80px;
             background-color: #8fdb9d;
             border-top-left-radius: 30px;
             border-top-right-radius: 30px;
@@ -150,19 +150,19 @@ function createPanel(addresses) {
 
         .leaf {
             position: absolute;
-            width: 70px;
-            height: 70px;
-            margin-top: 15%;
-            margin-left: 17%;
+            width: 50px;
+            height: 50px;
+            margin-top: 7%;
+            margin-left: 10%;
             display: inline-block;
         }
 
         .pin {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            margin-top: 5%;
-            margin-left: 81%;
+            width: 35px;
+            height: 35px;
+            margin-top: 8%;
+            margin-left: 80%;
             display: inline-block;
         }
 
@@ -173,9 +173,69 @@ function createPanel(addresses) {
         .percentage {
             position: absolute;
             display: inline-block;
-            font-size: 50px;
-            margin-left: 50%;
-            margin-top: 20%;
+            font-size: 38px;
+            margin-left: 40%;
+            margin-top: 4%;
+        }
+
+        .details {
+            position: relative;
+            width: 100%;
+            background-color: white;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            padding-left: 20px;
+        }
+
+        .destinationCard {
+            position: relative;
+            height: 110px;
+            width: 89%;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 2px solid black;
+        }
+
+        .destinationName {
+            position: absolute;
+            height: 40%;
+            width: 100%;
+            margin-left: 10px;
+            font-size: 20px;
+            text-transform: capitalize;
+        }
+
+        .bikeIcon {
+            position: absolute;
+            height: 30px;
+            width: 30px;
+            margin-top: 30px;
+            margin-left: 25px;
+        }
+
+        .bikeDetails {
+            position: absolute;
+            height: 30px;
+            width: 180px;
+            margin-top: 35px;
+            text-align: right;
+        }
+
+        .publicTransportIcon {
+            position: absolute;
+            height: 28px;
+            width: 28px;
+            margin-top: 65px;
+            margin-left: 25px;
+        }
+
+        .publicTransportDetails {
+            position: absolute;
+            height: 30px;
+            width: 180px;
+            margin-top: 69px;
+            text-align: right;
         }
     `;
 
@@ -199,12 +259,55 @@ function createPanel(addresses) {
 
     pin.src = "http://simpleicon.com/wp-content/uploads/pin.png"
 
+    // TODO set empty text first, and modify once we have score
     percentage.textContent = "74%"
 
     footprint.appendChild(leaf)
     footprint.appendChild(pin)
     footprint.appendChild(percentage)
     panel.appendChild(footprint)
+
+    let details = document.createElement("ul")
+    details.classList.add("details")
+
+    for (var i = 0; i < address_places.length; ++i) {
+        let destinationCard = document.createElement("div")
+        destinationCard.classList.add("destinationCard")
+
+        let destinationName = document.createElement("div")
+        destinationName.classList.add("destinationName")
+        destinationName.textContent = address_places[i].tag
+
+        let bikeIcon = document.createElement("img")
+        bikeIcon.classList.add("bikeIcon")
+        bikeIcon.src = "https://www.searchpng.com/wp-content/uploads/2019/02/Free-Cycle-Bicycle-Travel-Ride-Bike-Icon-PNG-Image-715x715.png"
+
+        let bikeDetails = document.createElement("div")
+        bikeDetails.classList.add("bikeDetails")
+        bikeDetails.textContent = "0 min"
+
+        let publicTransportIcon = document.createElement("img")
+        publicTransportIcon.classList.add("publicTransportIcon")
+        publicTransportIcon.src = "https://cdn4.iconfinder.com/data/icons/aiga-symbol-signs/439/Aiga_bus-512.png"
+
+        let publicTransportDetails = document.createElement("div")
+        publicTransportDetails.classList.add("publicTransportDetails")
+        publicTransportDetails.textContent = "0 min"
+
+        // remove last bottom border
+        if (i == address_places.length - 1) {
+            destinationCard.style.borderBottom = "0px"
+        }
+
+        destinationCard.appendChild(destinationName)
+        destinationCard.appendChild(bikeIcon)
+        destinationCard.appendChild(bikeDetails)
+        destinationCard.appendChild(publicTransportIcon)
+        destinationCard.appendChild(publicTransportDetails)
+        details.appendChild(destinationCard)
+    }
+
+    panel.appendChild(details)
 
     document.body.prepend(panel)
 
@@ -214,6 +317,11 @@ function createPanel(addresses) {
         panel.style.top = (y + 20) + "px"
         panel.style.left = (x + 20) + "px"
     }*/
+}
+
+function createDestinationEmptySubPanel() {
+    let destinationDiv = document.createElement("div")
+    destinationDiv.classList.add("destination")
 }
 
 // score -> color
@@ -228,22 +336,21 @@ function colorFromScore(score, classList) {
     }
 }
 
-// decimal (0 to 255, and +) -> hex
-var rgbToHex = function (rgb) {
-  var hex = Number(rgb).toString(16)
-  if (hex.length < 2) {
-       hex = "0".concat(hex)
-  }
-  return hex
-};
+// Main
 
-
-// add arguments and stuff, etc
 let addresses = lookUpAddresses()
-createPanel(addresses)
-let scores = computeMetrics(addresses)
-scores = Array.from({length: 40}, () => Math.random()) // TODO remove
-updateHTML(addresses, scores)
 
-// Example of how to call function from another file now that webpack is set up
-//update()
+browser.storage.local.get("address_places")
+    .then( (result) => {
+        let address_places = result.address_places
+        createPanel(addresses, address_places)
+    })
+    .catch( e => console.log("Storage init failure! " + e));
+
+let scores = computeMetrics(addresses)
+
+//updatePanel(addresses, scores)
+
+scores = Array.from({length: 40}, () => Math.random()) // TODO remove
+
+updateHTML(addresses, scores)
