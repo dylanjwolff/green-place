@@ -4,6 +4,8 @@ document.body.style.border = "5px solid red";
 
 let DEFAULT_ID_PREFIX = "green_place_"
 
+var hover_on = false;
+
 class Address {
     constructor(id, address) {
         this.id = id
@@ -71,7 +73,7 @@ function updateHTML(addresses, scores) {
             panel.style.zIndex = 200
             panel.style.position = "fixed"
             panel.style.left = (rect.left - 60)+ "px"
-            panel.style.top = (rect.top + 60) + "px"
+            panel.style.top = (rect.top + 40) + "px"
 
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0.3)"
@@ -82,12 +84,14 @@ function updateHTML(addresses, scores) {
             }
 
             browser.runtime.sendMessage({"request": "addAddress", "address" : addresses[i]})
+
+            hover_on = true
         })
 
         element.addEventListener("mouseout", function(event) {
             let panel = document.getElementById("panel-id")
             panel.style.opacity = 0
-            panel.style.zIndex = -1
+            //panel.style.zIndex = -1
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0)"
             } else if (event.target.classList.contains("greenplace-underline-yellow")) {
@@ -125,19 +129,28 @@ function createPanel(addresses) {
     style.id = "panel-style"
 
     style.innerHTML = `
-        .overlay {
+        .panel-content {
+            position: relative;
+            background-color: white;
+            background-clip: content-box;
+            border-radius: 30px;
+        }
+        #panel-id {
             opacity: 0;
-            z-index:200;
-            position:fixed;
+            position : fixed;
+        }
+        
+        .overlay {
+            z-index: 199;
+            position:relative;
             display:block;
         }
 
         .panel {
-            background-color: white;
+            padding-top:20px;
             width: 250px;
-            height: 400px;
-            border-radius: 30px;
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            height: 460px;
+            box-sizing: padding-box;
         }
 
         .footprint {
@@ -183,18 +196,36 @@ function createPanel(addresses) {
     document.head.appendChild(style)
 
     let panel = document.createElement("div")
+    let panelContent = document.createElement("div")
+
+
+    panel.addEventListener("mouseover", function (event) {
+        if (hover_on) {
+            panel.style.opacity = 1
+            panel.target.style.zIndex = 200
+        }
+    });
+
+    panel.addEventListener("mouseleave", function (event) {
+        hover_on = false
+        panel.style.opacity = 0
+        panel.target.style.zIndex = -1
+    });
+
     let footprint = document.createElement("div")
     let leaf = document.createElement("img")
     let pin = document.createElement("img")
     let percentage = document.createElement("div")
 
     panel.id = "panel-id"
-    panel.classList.add("overlay")
-    panel.classList.add("panel")
+    panelContent.id = "panel-content"
     footprint.classList.add("footprint")
     leaf.classList.add("leaf")
     pin.classList.add("pin")
     percentage.classList.add("percentage")
+    panelContent.classList.add("panel-content")
+    panelContent.classList.add("overlay")
+    panelContent.classList.add("panel")
 
     leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
 
@@ -205,7 +236,9 @@ function createPanel(addresses) {
     footprint.appendChild(leaf)
     footprint.appendChild(pin)
     footprint.appendChild(percentage)
-    panel.appendChild(footprint)
+    panelContent.appendChild(footprint)
+
+    panel.appendChild(panelContent)
 
     document.body.prepend(panel)
 
