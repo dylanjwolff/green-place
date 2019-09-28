@@ -132,11 +132,9 @@ function createPanel(addresses) {
         }
 
         .panel {
-            margin-left: 700px;
-            margin-top: 100px;
+            background-color: white;
             width: 250px;
             height: 400px;
-            background-color: white;
             border-radius: 30px;
             box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
         }
@@ -195,7 +193,6 @@ function createPanel(addresses) {
     footprint.classList.add("footprint")
     leaf.classList.add("leaf")
     pin.classList.add("pin")
-    pin.classList.add("pin_selected")
     percentage.classList.add("percentage")
 
     leaf.src = "https://cdn2.iconfinder.com/data/icons/love-nature/600/green-Leaves-nature-leaf-tree-garden-environnement-512.png"
