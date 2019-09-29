@@ -35,7 +35,7 @@ export async function calculate_car(dist) {
  * @param {String} mode Mean of transportation. Possible values: `car, truck, taxi, bus, van, motorcycle, bicycle, pedestrian`
  */
 export async function calculate_distances(src, dst, mode = "car") {
-    console.log("Compute distance")
+    console.log(`[${mode}]Compute distance`)
     var origins = Array()
     for (var addr of src) {
         origins.push({
@@ -45,7 +45,7 @@ export async function calculate_distances(src, dst, mode = "car") {
             }
         })
     }
-    console.log("Origins points created")
+    console.log(`[${mode}]Origins points created`)
     var destinations = Array()
     for (var addr of dst) {
         destinations.push({
@@ -55,7 +55,7 @@ export async function calculate_distances(src, dst, mode = "car") {
             }
         })
     }
-    console.log("Destination points created")
+    console.log(`[${mode}]Destination points created`)
     var req = tomtom.services.matrixRouting({
         key: "Tp0r2ThYEIXweY2egqz7wIjGDABSAe8C",
         origins: origins,
@@ -63,9 +63,9 @@ export async function calculate_distances(src, dst, mode = "car") {
         travelMode: mode,
         traffic: false
     })
-    console.log("Tomtom req", req)
+    console.log(`[${mode}]Tomtom req`, req)
     let tomtomRes = await req.go()
-    console.log("Tomtom res is ", tomtomRes)
+    console.log(`[${mode}]Tomtom res is `, tomtomRes)
     return tomtomRes
 }
 

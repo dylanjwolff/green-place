@@ -41,8 +41,6 @@ class DestinationAddress extends BaseAddress {
     }
 }
 
-
-
 // () -> Array(Address)
 function lookUpAddresses() {
     try {
@@ -110,42 +108,74 @@ async function computeMetrics(startPlaces, dstPlaces) {
     startPlaces = startPlaces.filter((elem) => {
         return elem.found;
     })
+    console.log("startPlaces is now", startPlaces.length)
 
-    startPlaces = startPlaces.map( sp => {sp.poi = []; return sp})
+    startPlaces = startPlaces.map(sp => {
+        sp.poi = [];
+        return sp
+    })
 
     if (GOOGLE_FEATURE_FLAG) {
-            startPlaces.map( sp => {
-                    nearby(sp.lat, sp.lon, "grocery")
-                       .then( res => { sp.poi.push({tag: "grocery", lat: res.lat, lon: res.lng}); return sp })
-                       .catch( e => "poi err" + e )
-            })
-            startPlaces = await Promise.all(startPlaces)
+        startPlaces.map(sp => {
+            nearby(sp.lat, sp.lon, "grocery")
+                .then(res => {
+                    sp.poi.push({
+                        tag: "grocery",
+                        lat: res.lat,
+                        lon: res.lng
+                    });
+                    return sp
+                })
+                .catch(e => "poi err" + e)
+        })
+        startPlaces = await Promise.all(startPlaces)
     } else {
-            startPlaces = startPlaces.map( sp => { sp.poi.push({lat: "47.3723941", lon: "8.5423328", tag: "grocery"}); return sp })
+        startPlaces = startPlaces.map(sp => {
+            sp.poi.push({
+                lat: "47.3723941",
+                lon: "8.5423328",
+                tag: "grocery"
+            });
+            return sp
+        })
     }
 
     console.log("startPlaces ", startPlaces)
-    console.log("startPlaces is not", startPlaces.length)
     //Compute the distance matrix
     let allPromises = new Array()
-    const carDistances = await calculate_distances(startPlaces, dstPlaces, 'car')
-
+    const carDistProm = calculate_distances(startPlaces, dstPlaces, 'car')
+    const bikeDistProm = calculate_distances(startPlaces, dstPlaces, 'bicycle')
+    const carDistances = await carDistProm
+    const bikeDistances = await bikeDistProm
+    console.log(carDistances, bikeDistances)
     //compute the car carbon footprint for each
-    for (var row in carDistances) {
-        for (var col in carDistances[row]) {
+    for (let row in carDistances) {
+        startPlaces[row].times = {}
+        for (let col in carDistances[row]) {
             console.log("Computing carbon for", startPlaces[row].id, dstPlaces[col].tag)
+            startPlaces[row].times[dstPlaces[col].tag] = {
+                bike: bikeDistances[row][col].routeSummary.travelTimeInSeconds,
+                car: carDistances[row][col].routeSummary.travelTimeInSeconds
+            }
             let carbonPromise = calculate_car(carDistances[row][col].routeSummary.lengthInMeters / 1000)
             allPromises.push(carbonPromise)
         }
     }
     let allCarbons = await Promise.all(allPromises)
     console.log("Assigning carbon to paths, ", allCarbons)
+    let max_carbon = {}
+    for (let i in dstPlaces) {
+        max_carbon[dstPlaces[i].tag] = 0;
+    }
     for (var i = 0; i < allCarbons.length; i++) {
         //determine equivalent to matrix view
         let col = i % dstPlaces.length
         let row = Math.floor(i / dstPlaces.length)
 
         startPlaces[row].all_footprints[dstPlaces[col].tag] = allCarbons[i]
+        if (allCarbons[i] > max_carbon[dstPlaces[col].tag]) {
+            max_carbon[dstPlaces[col].tag] = allCarbons[i]
+        }
     }
 
     //update footprint with weighted average
@@ -164,15 +194,15 @@ async function computeMetrics(startPlaces, dstPlaces) {
         place.footprint = globalFootprint
     }
     console.log("Sources addresses have become", startPlaces)
-    // normalize(startPlaces, max_carbon);
+    normalize(startPlaces, max_carbon);
 }
 
-function normalize(startingAddresses, max_carbon) {
-    console.log("Normalizing")
-    for (var i in startingAddresses) {
-        for (var target in startingAddresses[i].all_footprints) {
-            startingAddresses[i].all_footprints[target] = startingAddresses[i].all_footprints[target] / max_carbon;
-            startingAddresses[i].footprint = startingAddresses[i].all_footprints[target];
+function normalize(startPlaces, max_carbon) {
+    console.log("Normalizing with max_carbon", max_carbon)
+    for (var i in startPlaces) {
+        for (var target in startPlaces[i].all_footprints) {
+            startPlaces[i].all_footprints[target] = startPlaces[i].all_footprints[target] / max_carbon[target];
+            startPlaces[i].footprint = startPlaces[i].all_footprints[target];
         }
     }
 }
@@ -229,7 +259,7 @@ function updateHTML(addresses) {
             console.log(cached_adresses)
             console.log(typeof pin.classList)
 
-            if (!cached_adresses.includes(current_selected_address)){
+            if (!cached_adresses.includes(current_selected_address)) {
                 console.log("cached_adresses does not contains current selected")
             }
 
@@ -242,7 +272,9 @@ function updateHTML(addresses) {
 
             console.log("after")
 
-            browser.runtime.sendMessage({"request" : "sendAddresses"})
+            browser.runtime.sendMessage({
+                "request": "sendAddresses"
+            })
 
             if (event.target.classList.contains("greenplace-underline-green")) {
                 event.target.style.backgroundColor = "rgba(77, 214, 98, 0.3)"
@@ -474,12 +506,22 @@ async function createPanel(addresses, address_places, car_boolean) {
     pin.addEventListener("mousedown", function (event) {
         if (!pin.classList.contains("pin_selected")) {
             pin.classList.add("pin_selected")
-            browser.runtime.sendMessage({"request" : "addAddress", "address" : current_selected_address})
-            browser.runtime.sendMessage({"request" : "sendAddresses"})
+            browser.runtime.sendMessage({
+                "request": "addAddress",
+                "address": current_selected_address
+            })
+            browser.runtime.sendMessage({
+                "request": "sendAddresses"
+            })
         } else {
             pin.classList.remove("pin_selected")
-            browser.runtime.sendMessage({"request" : "removeAddress", "address" : current_selected_address})
-            browser.runtime.sendMessage({"request" : "sendAddresses"})
+            browser.runtime.sendMessage({
+                "request": "removeAddress",
+                "address": current_selected_address
+            })
+            browser.runtime.sendMessage({
+                "request": "sendAddresses"
+            })
         }
     });
 
@@ -612,7 +654,7 @@ function createSummary() {
     document.body.prepend(summary)
 }
 
-function fillSummary(){
+function fillSummary() {
     let summary = document.getElementById("summary")
     let to_fill = document.getElementById("to_fill")
     to_fill.innerHTML = ``;
@@ -661,7 +703,7 @@ function fillSummary(){
     }
 }
 
-function createCheckout(){
+function createCheckout() {
     let checkout = document.createElement("div")
     checkout.innerHTML = `
         saved (${nbAddresses})
@@ -751,24 +793,29 @@ browser.runtime.sendMessage({"request" : "sendAddresses"})
 
 // Main
 let startPlaces = lookUpAddresses()
-underlineWaiting(startPlaces)
-browser.runtime.sendMessage({"request" : "sendAddresses"})
+if (startPlaces.length > 0) {
 
-let destPlaces = []
-browser.storage.local.get("address_places")
-    .then((result) => {
-        destPlaces = result.address_places
-        console.log(destPlaces)
-        browser.storage.local.get("car_boolean")
-            .then((result) => {
-                console.log("About to create panel")
-                createPanel(startPlaces, destPlaces, result.car_boolean)
-            })
-        if (destPlaces.length > 0) {
-            computeMetrics(startPlaces, destPlaces).then(() => {
-                console.log("Updating html")
-                updateHTML(startPlaces)
-            })
-        }
+    underlineWaiting(startPlaces)
+    browser.runtime.sendMessage({
+        "request": "sendAddresses"
     })
-    .catch(error => console.log("Storage init failure! " + error));
+
+    let destPlaces = []
+    browser.storage.local.get("address_places")
+        .then((result) => {
+            destPlaces = result.address_places
+            console.log(destPlaces)
+            browser.storage.local.get("car_boolean")
+                .then((result) => {
+                    console.log("About to create panel")
+                    createPanel(startPlaces, destPlaces, result.car_boolean)
+                })
+            if (destPlaces.length > 0) {
+                computeMetrics(startPlaces, destPlaces).then(() => {
+                    console.log("Updating html")
+                    updateHTML(startPlaces)
+                })
+            }
+        })
+        .catch(error => console.log("Storage init failure! " + error));
+}
