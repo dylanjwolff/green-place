@@ -22,12 +22,13 @@ class BaseAddress {
     }
 }
 class OriginAddress extends BaseAddress {
-    constructor(id, address, parent_link) {
+    constructor(id, address, parent_link, timestamp) {
         super(address)
         this.id = id
         this.all_footprints = {}
         this.footprint = 1
         this.parent_link = parent_link
+        this.timestamp = timestamp
     }
 }
 
@@ -59,7 +60,8 @@ function lookUpAddresses() {
         let addr = new OriginAddress(
             elems[i].getElementsByClassName("value")[0].id,
             elems[i].getElementsByClassName("value")[0].innerText.replace(/(?:\r\n|\r|\n)/g, ', '),
-            ancestor_link.href)
+            ancestor_link.href,
+            date.getDay())
         arr.push(addr)
     }
 
@@ -570,7 +572,7 @@ function createSummary() {
     <!-- just in case viewer is using Internet Explorer -->
     <!--[if IE]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 <!-- Header-->
-<h1 style="text-align: center">Housing Summary</h1>
+<h1 style="text-align: center">Green Palaces in the making ;)</h1>
 <br>
 
 <!-- main container -->
@@ -611,17 +613,36 @@ function fillSummary(){
         let grid_a = document.createElement("div")
         grid_a.classList.add("grid-4")
 
-        grid_a.innerHTML = `
+        let container_a = document.createElement("div")
+        container_a.classList.add("container")
+
+        container_a.innerHTML = `
             ${a.address}
         `
+
+        grid_a.appendChild(container_a)
         row.appendChild(grid_a)
 
         let grid_b = document.createElement("div")
         grid_b.classList.add("grid-4")
 
-        grid_b.innerHTML = `
+        let container_b = document.createElement("div")
+        container_b.classList.add("container")
+
+        container_b.innerHTML = `
             <a href="${a.parent_link}"> ${a.parent_link} </a><hr>
         `
+
+        grid_b.appendChild(container_b)
+
+        let container_c = document.createElement("div")
+        container_c.classList.add("container")
+
+        container_c.innerHTML = `
+           <strong> added on ${a.timestamp} </strong>
+        `
+
+        grid_b.appendChild(container_c)
         row.appendChild(grid_b)
 
         to_fill.appendChild(row)
