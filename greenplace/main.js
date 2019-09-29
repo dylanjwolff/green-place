@@ -208,7 +208,7 @@ function normalize(startPlaces, max_carbon) {
 }
 
 // List(eco-score) -> ()
-function updateHTML(addresses) {
+function updateHTML(addresses, destPlaces) {
     console.log("updateHTML started")
 
     var style = document.createElement("style")
@@ -253,6 +253,19 @@ function updateHTML(addresses) {
             panel.style.top = (rect.top + 40) + "px"
 
             current_selected_address = addresses[i]
+
+            let percentage = document.getElementById("percentage")
+            percentage.textContent = Math.floor(100 * (1 - addresses[i].footprint)) + "%"
+
+            for (var j = 0; j < destPlaces.length; ++j) {
+                let tag = destPlaces[j].tag
+
+                let bikeDetails = document.getElementById("bikeDetails_" + tag)
+                bikeDetails.textContent = Math.floor(addresses[i].times[tag].bike / 60) + " min"
+
+                let publicTransportDetails = document.getElementById("publicTransportDetails_" + tag)
+                publicTransportDetails.textContent = Math.floor(addresses[i].times[tag].car / 60) + " min"
+            }
 
             let pin = document.getElementById("pin")
             console.log(current_selected_address)
@@ -306,23 +319,14 @@ function updateHTML(addresses) {
 
         // Set appropriate color style
         let score = addresses[i].footprint
-        console.log(i)
-        if (score >= 0.7) {
+        console.log("score " + score)
+        if (score >= 0.8) {
             element.classList.add("greenplace-underline-red")
-        } else if (score >= 0.4) {
+        } else if (score >= 0.75) {
             element.classList.add("greenplace-underline-yellow")
         } else {
             element.classList.add("greenplace-underline-green")
         }
-
-        let percentage = document.getElementById("percentage")
-        percentage.textContent = "12%"
-
-        let bikeDetails = document.getElementById("bikeDetails")
-        bikeDetails.textContent = "5 min"
-
-        let publicTransportDetails = document.getElementById("publicTransportDetails")
-        publicTransportDetails.textContent = "6 min"
 
         // Add leaf image to the side of the underline
         var image = document.createElement("img")
@@ -542,8 +546,7 @@ async function createPanel(addresses, address_places, car_boolean) {
 
     pin.src = "https://cdn3.iconfinder.com/data/icons/pix-glyph-set/50/520769-paper_pin-512.png"
 
-    // TODO set empty text first, and modify once we have score
-    percentage.textContent = "74%"
+    percentage.textContent = "0%"
 
     footprint.appendChild(leaf)
     footprint.appendChild(pin)
@@ -568,7 +571,7 @@ async function createPanel(addresses, address_places, car_boolean) {
         bikeIcon.src = "https://www.searchpng.com/wp-content/uploads/2019/02/Free-Cycle-Bicycle-Travel-Ride-Bike-Icon-PNG-Image-715x715.png"
 
         let bikeDetails = document.createElement("div")
-        bikeDetails.id = "bikeDetails"
+        bikeDetails.id = "bikeDetails_" + address_places[i].tag
         bikeDetails.classList.add("bikeDetails")
         bikeDetails.textContent = "0 min"
 
@@ -581,7 +584,7 @@ async function createPanel(addresses, address_places, car_boolean) {
         }
 
         let publicTransportDetails = document.createElement("div")
-        publicTransportDetails.id = "publicTransportDetails"
+        publicTransportDetails.id = "publicTransportDetails_" + address_places[i].tag
         publicTransportDetails.classList.add("publicTransportDetails")
         publicTransportDetails.textContent = "0 min"
 
@@ -813,7 +816,7 @@ if (startPlaces.length > 0) {
             if (destPlaces.length > 0) {
                 computeMetrics(startPlaces, destPlaces).then(() => {
                     console.log("Updating html")
-                    updateHTML(startPlaces)
+                    updateHTML(startPlaces, destPlaces)
                 })
             }
         })
