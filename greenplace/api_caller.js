@@ -57,7 +57,7 @@ export async function calculate_distances(src, dst, mode = "car") {
     }
     console.log("Destination points created")
     var req = tomtom.services.matrixRouting({
-        key: "AXsEsMCVKWN9Svf9spBR4y33MYxzaAXy",
+        key: "Tp0r2ThYEIXweY2egqz7wIjGDABSAe8C",
         origins: origins,
         destinations: destinations,
         travelMode: mode,

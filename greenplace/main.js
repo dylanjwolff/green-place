@@ -121,7 +121,7 @@ async function computeMetrics(startPlaces, dstPlaces) {
             })
             startPlaces = await Promise.all(startPlaces)
     } else {
-            startPlaces = startPlaces.map( sp => { sp.poi.push({lat: "47.3723941", lon: "8.5423328", tag: "grocery"}); return sp }) 
+            startPlaces = startPlaces.map( sp => { sp.poi.push({lat: "47.3723941", lon: "8.5423328", tag: "grocery"}); return sp })
     }
 
     console.log("startPlaces ", startPlaces)
@@ -282,6 +282,15 @@ function updateHTML(addresses) {
         } else {
             element.classList.add("greenplace-underline-green")
         }
+
+        let percentage = document.getElementById("percentage")
+        percentage.textContent = "12%"
+
+        let bikeDetails = document.getElementById("bikeDetails")
+        bikeDetails.textContent = "5 min"
+
+        let publicTransportDetails = document.getElementById("publicTransportDetails")
+        publicTransportDetails.textContent = "6 min"
 
         // Add leaf image to the side of the underline
         var image = document.createElement("img")
@@ -478,6 +487,7 @@ async function createPanel(addresses, address_places, car_boolean) {
 
     panel.id = "panel-id"
     panelContent.id = "panel-content"
+    percentage.id = "percentage"
     footprint.classList.add("footprint")
     leaf.classList.add("leaf")
     pin.classList.add("pin")
@@ -516,6 +526,7 @@ async function createPanel(addresses, address_places, car_boolean) {
         bikeIcon.src = "https://www.searchpng.com/wp-content/uploads/2019/02/Free-Cycle-Bicycle-Travel-Ride-Bike-Icon-PNG-Image-715x715.png"
 
         let bikeDetails = document.createElement("div")
+        bikeDetails.id = "bikeDetails"
         bikeDetails.classList.add("bikeDetails")
         bikeDetails.textContent = "0 min"
 
@@ -528,6 +539,7 @@ async function createPanel(addresses, address_places, car_boolean) {
         }
 
         let publicTransportDetails = document.createElement("div")
+        publicTransportDetails.id = "publicTransportDetails"
         publicTransportDetails.classList.add("publicTransportDetails")
         publicTransportDetails.textContent = "0 min"
 
@@ -705,6 +717,23 @@ function createCheckout(){
     document.body.prepend(checkout)
 }
 
+function underlineWaiting(addresses) {
+    var style = document.createElement("style")
+    style.innerHTML = `
+        .greenplace-underline-waiting {
+            display: inline-block;
+            border-bottom: 6px solid #DDDDDD;
+            border-radius: 5px;
+        }
+    `
+    document.getElementsByTagName('head')[0].appendChild(style)
+
+    for (var i = 0; i < addresses.length; ++i) {
+        let under = document.getElementById(addresses[i].id).childNodes[0].childNodes[0]
+        under.classList.add("greenplace-underline-waiting")
+    }
+}
+
 // add arguments and stuff, etc
 createSummary()
 createCheckout()
@@ -722,6 +751,7 @@ browser.runtime.sendMessage({"request" : "sendAddresses"})
 
 // Main
 let startPlaces = lookUpAddresses()
+underlineWaiting(startPlaces)
 browser.runtime.sendMessage({"request" : "sendAddresses"})
 
 let destPlaces = []
