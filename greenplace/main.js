@@ -711,11 +711,14 @@ function createCheckout() {
     checkout.innerHTML = `
         saved (${nbAddresses})
     `
-    checkout.style.height = "100px";
+    checkout.style.height = "200px";
     checkout.style.width = "200px";
     checkout.style.backgroundColor = "rgba(255, 255, 255, .95)";
     checkout.style.textAlign = "center"
     checkout.style.fontSize = "40px";
+    checkout.style.borderRadius = "30px";
+    checkout.style.borderTop = "solid 3px gray"
+
     checkout.style.fontSize = "helvetica"
     checkout.style.zIndex = "400";
     checkout.style.position = "fixed"
@@ -727,7 +730,7 @@ function createCheckout() {
         console.log("mousedown")
         if (check_down) {
             let summary = document.getElementById("summary")
-            checkout.style.top = "25%";
+            checkout.style.top = "28%";
             checkout.style.transitionProperty = "top";
             checkout.style.transitionDuration = ".6s";
             checkout.innerHTML = `
@@ -753,6 +756,8 @@ function createCheckout() {
             summary.style.top = "100%";
             summary.style.transitionProperty = "top";
             summary.style.transitionDuration = ".6s";
+            summary.style.borderRadius = "30px";
+            summary.style.borderTop = "solid 3px gray"
 
             check_down = true
         }
