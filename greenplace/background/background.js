@@ -5,14 +5,28 @@ console.log("background running")
 currentAddresses = []
 
 function notify(message) {
+    console.log(message)
     switch (message.request) {
         case "addAddress":
-            currentAddresses += message.address
-            console.log(currentAddresses)
+            console.log("adding")
+            currentAddresses.push(message.address)
             break
         case "removeAddress":
-            currentAddresses.remove(message.address)
-            console.log(currentAddresses)
+            console.log("removing")
+            let idx = currentAddresses.indexOf(message.address)
+            currentAddresses.splice(idx, 1)
             break
+        case "sendAddresses":
+            try {
+                browser.tabs.query({active: true, currentWindow: true}, function (tabs) {
+                    console.log(tabs[0].id)
+                    browser.tabs.sendMessage(tabs[0].id, {"Adresses": currentAddresses})
+                })
+            } catch {
+                console.log("null tabs")
+            }
+            break
+        default:
+            console.log("bad request")
     }
 }
