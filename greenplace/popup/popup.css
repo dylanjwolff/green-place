@@ -1,20 +1,35 @@
 body {
-        background-color: #8fdb9d;
-        font-family: Arial, Helvetica, sans-serif;
-        width: 500px;
+        background-color: white;
+        opacity: .97;
+        border-radius: 30px;
+        font-family: Helvetica, sans-serif;
+        width: 520px;
+        padding: 10px;
+        overflow: visible;
+}
+
+body h1 {
+    padding-top: 2px;
+    font-family: Helvetica, sans-serif;
+    margin-top: 10px;
 }
 
 button {
        background-color: #4CAF50;
-       border: none;
+       border-radius: 10px;
+       opacity : .8;
        color: white;
        padding: 15px 32px;
        text-align: center;
        text-decoration: none;
        display: inline-block;
        font-size: 16px;
-       margin: 4px 2px;
+       margin: 6px 4px;
        cursor: pointer;
+}
+
+button:hover {
+    opacity : 1;
 }
 
 input[type=text] {
