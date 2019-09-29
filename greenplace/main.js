@@ -8,6 +8,7 @@ import {
 } from "./nearby.js"
 
 const GOOGLE_FEATURE_FLAG = false
+const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 let DEFAULT_ID_PREFIX = "green_place_"
 
 var hover_on = false;
@@ -56,12 +57,11 @@ function lookUpAddresses() {
         elems[i].getElementsByClassName("value")[0].id = DEFAULT_ID_PREFIX + i
         let ancestor_link = elems[i].closest("a")
         //console.log(ancestor_link)
-
+        var timestamp = new Date()
         let addr = new OriginAddress(
             elems[i].getElementsByClassName("value")[0].id,
             elems[i].getElementsByClassName("value")[0].innerText.replace(/(?:\r\n|\r|\n)/g, ', '),
-            ancestor_link.href,
-            date.getDay())
+            ancestor_link.href, days[timestamp.getDay()])
         arr.push(addr)
     }
 
@@ -642,7 +642,7 @@ function fillSummary(){
         container_b.classList.add("container")
 
         container_b.innerHTML = `
-            <a href="${a.parent_link}"> ${a.parent_link} </a><hr>
+            <a href="${a.parent_link}"> ${a.parent_link} </a>
         `
 
         grid_b.appendChild(container_b)
@@ -651,7 +651,7 @@ function fillSummary(){
         container_c.classList.add("container")
 
         container_c.innerHTML = `
-           <strong> added on ${a.timestamp} </strong>
+           <strong style="text-align: right"> added on ${a.timestamp} </strong><hr>
         `
 
         grid_b.appendChild(container_c)
@@ -682,7 +682,7 @@ function createCheckout(){
         console.log("mousedown")
         if (check_down) {
             let summary = document.getElementById("summary")
-            checkout.style.top = "30%";
+            checkout.style.top = "25%";
             checkout.style.transitionProperty = "top";
             checkout.style.transitionDuration = ".6s";
             checkout.innerHTML = `
